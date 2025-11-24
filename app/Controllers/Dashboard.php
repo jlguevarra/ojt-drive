@@ -8,10 +8,18 @@ class Dashboard extends BaseController {
              return redirect()->to('/faculty/dashboard');
         }
         
-        // Fetch all files
         $db = \Config\Database::connect();
-        $query = $db->query("SELECT * FROM files ORDER BY created_at DESC");
-        $data['files'] = $query->getResultArray();
+        $builder = $db->table('files');
+
+        // SEARCH LOGIC
+        $search = $this->request->getGet('q'); // Get the search term from URL
+        if(!empty($search)){
+            $builder->like('filename', $search); // Filter by name
+        }
+
+        // Get results
+        $data['files'] = $builder->orderBy('created_at', 'DESC')->get()->getResultArray();
+        $data['search_term'] = $search; // Pass this back to the view
 
         return view('admin_dashboard', $data);
     }
@@ -19,13 +27,18 @@ class Dashboard extends BaseController {
     public function faculty() {
         $session = session();
         
-        // Fetch all files (Read Only)
         $db = \Config\Database::connect();
-        $query = $db->query("SELECT * FROM files ORDER BY created_at DESC");
-        $data['files'] = $query->getResultArray();
+        $builder = $db->table('files');
 
-        // Note: You need to create a faculty_dashboard.php similar to admin
-        // but REMOVE the upload form and REMOVE the delete button.
+        // SEARCH LOGIC (Same for Faculty)
+        $search = $this->request->getGet('q');
+        if(!empty($search)){
+            $builder->like('filename', $search);
+        }
+
+        $data['files'] = $builder->orderBy('created_at', 'DESC')->get()->getResultArray();
+        $data['search_term'] = $search;
+
         return view('faculty_dashboard', $data);
     }
 

@@ -16,55 +16,7 @@
 <body class="bg-gray-50 h-screen flex overflow-hidden">
 
     <!-- SIDEBAR -->
-    <div class="w-64 bg-white border-r border-gray-200 flex flex-col hidden md:flex">
-        <div class="p-6 flex items-center space-x-2">
-            <div class="bg-blue-600 p-2 rounded-lg">
-                <i class='bx bxs-folder text-white text-xl'></i>
-            </div>
-            <span class="text-xl font-bold text-gray-800">HCC Drive</span>
-        </div>
-
-        <div class="px-4 mb-6">
-            <!-- Upload Button triggers Modal -->
-            <button onclick="openUploadModal()" class="w-full flex items-center justify-center space-x-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 py-3 rounded-full shadow-sm transition-all font-medium">
-                <i class='bx bx-upload text-xl'></i>
-                <span>New Upload</span>
-            </button>
-        </div>
-
-        <nav class="flex-1 space-y-1 px-2">
-            <a href="#" class="flex items-center space-x-3 w-full px-4 py-2 rounded-r-full bg-blue-100 text-blue-700 font-medium">
-                <i class='bx bx-home-alt text-xl'></i>
-                <span>My Drive</span>
-            </a>
-            <a href="#" class="flex items-center space-x-3 w-full px-4 py-2 rounded-r-full text-gray-600 hover:bg-gray-100 font-medium">
-                <i class='bx bx-group text-xl'></i>
-                <span>Shared with me</span>
-            </a>
-            
-            <div class="border-t border-gray-100 my-4 pt-4"></div>
-            <p class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Admin Panel</p>
-            <a href="<?= base_url('admin/users') ?>" class="flex items-center space-x-3 w-full px-4 py-2 rounded-r-full text-gray-600 hover:bg-gray-100 font-medium transition-colors">
-                <i class='bx bx-user text-xl'></i>
-                <span>Manage Users</span>
-            </a>
-
-            <a href="#" class="flex items-center space-x-3 w-full px-4 py-2 rounded-r-full text-gray-600 hover:bg-gray-100 font-medium">
-                <i class='bx bx-cog text-xl'></i>
-                <span>Settings</span>
-            </a>
-        </nav>
-
-        <div class="p-4 border-t border-gray-200">
-            <div class="bg-blue-50 rounded-lg p-3">
-                <p class="text-xs text-blue-600 font-medium mb-1">Storage Used</p>
-                <div class="w-full bg-blue-200 rounded-full h-1.5 mb-2">
-                    <div class="bg-blue-600 h-1.5 rounded-full" style="width: 45%"></div>
-                </div>
-                <p class="text-xs text-gray-500">Unlimited Access</p>
-            </div>
-        </div>
-    </div>
+    <?= view('components/sidebar_admin'); ?>
 
     <!-- MAIN CONTENT -->
     <div class="flex-1 flex flex-col overflow-hidden">
@@ -72,11 +24,21 @@
         <!-- HEADER -->
         <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 shadow-sm z-10">
             <div class="flex items-center flex-1 max-w-2xl">
-                <div class="relative w-full">
+                <!-- UPDATED SEARCH BAR CONTAINER -->
+                <div class="relative w-full group">
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i class='bx bx-search text-gray-400 text-xl'></i>
+                        <i class='bx bx-search text-gray-400 text-xl group-focus-within:text-blue-500 transition-colors'></i>
                     </span>
-                    <input type="text" placeholder="Search in Drive" class="block w-full pl-10 pr-3 py-2 border-none rounded-lg bg-gray-100 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors text-sm">
+                    
+                    <!-- Search Input with ID and onKeyup -->
+                    <input type="text" id="searchInput" onkeyup="filterFiles()" 
+                           placeholder="Search files instantly..." 
+                           class="block w-full pl-10 pr-10 py-2 border-none rounded-lg bg-gray-100 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors text-sm">
+                    
+                    <!-- Clear 'X' Button (Hidden by default) -->
+                    <button id="clearBtn" onclick="clearSearch()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-red-500 hidden cursor-pointer transition-colors">
+                        <i class='bx bx-x-circle text-xl'></i>
+                    </button>
                 </div>
             </div>
 
@@ -113,14 +75,14 @@
                 </div>
             </div>
 
-            <!-- FILES GRID -->
+            <!-- FILES GRID (Added ID) -->
             <h2 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">All Files</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div id="fileGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 
                 <?php if(!empty($files)): foreach($files as $file): ?>
                 
-                <!-- FILE CARD -->
-                <div class="bg-white p-4 rounded-xl border border-gray-200 hover:shadow-md transition-shadow flex flex-col justify-between h-40 relative group">
+                <!-- FILE CARD (Added class 'file-item') -->
+                <div class="file-item bg-white p-4 rounded-xl border border-gray-200 hover:shadow-md transition-shadow flex flex-col justify-between h-40 relative group">
                     <div class="flex justify-between items-start">
                         <div class="p-2 rounded-lg bg-blue-100 text-blue-600">
                             <i class='bx bxs-file-doc text-xl'></i>
@@ -131,7 +93,8 @@
                         </a>
                     </div>
                     <div>
-                        <h3 class="text-sm font-medium text-gray-700 truncate" title="<?= esc($file['filename']) ?>">
+                        <!-- FILENAME (Added class 'file-name') -->
+                        <h3 class="file-name text-sm font-medium text-gray-700 truncate" title="<?= esc($file['filename']) ?>">
                             <?= esc($file['filename']) ?>
                         </h3>
                         <div class="flex justify-between items-end mt-1">
@@ -144,6 +107,12 @@
                 <?php endforeach; else: ?>
                     <p class="text-gray-500 col-span-3">No files found. Click "New Upload" to start.</p>
                 <?php endif; ?>
+                
+                <!-- No Results Hidden Message -->
+                <div id="noResults" class="hidden col-span-full text-center py-10 text-gray-400">
+                    <i class='bx bx-search text-4xl mb-2'></i>
+                    <p>No matching files found.</p>
+                </div>
 
             </div>
         </main>
@@ -186,6 +155,51 @@
             if(input.files && input.files[0]) {
                 document.getElementById('fileNameDisplay').innerText = input.files[0].name;
             }
+        }
+
+        // --- REAL TIME SEARCH SCRIPT ---
+        function filterFiles() {
+            let input = document.getElementById('searchInput');
+            let filter = input.value.toLowerCase();
+            let clearBtn = document.getElementById('clearBtn');
+            let fileGrid = document.getElementById('fileGrid');
+            let cards = fileGrid.getElementsByClassName('file-item');
+            let noResults = document.getElementById('noResults');
+            let visibleCount = 0;
+
+            // Toggle Clear Button
+            if(filter.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+
+            // Loop and Filter
+            for (let i = 0; i < cards.length; i++) {
+                let titleElement = cards[i].getElementsByClassName('file-name')[0];
+                let txtValue = titleElement.textContent || titleElement.innerText;
+                
+                if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                    cards[i].classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    cards[i].classList.add('hidden');
+                }
+            }
+
+            // Show 'No Results' if all hidden
+            if(visibleCount === 0 && cards.length > 0) {
+                noResults.classList.remove('hidden');
+            } else {
+                noResults.classList.add('hidden');
+            }
+        }
+
+        function clearSearch() {
+            let input = document.getElementById('searchInput');
+            input.value = '';
+            filterFiles();
+            input.focus();
         }
     </script>
 

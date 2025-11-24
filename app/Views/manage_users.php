@@ -15,58 +15,7 @@
 </head>
 <body class="bg-gray-50 h-screen flex overflow-hidden">
 
-    <!-- SIDEBAR (Identical Structure) -->
-    <div class="w-64 bg-white border-r border-gray-200 flex flex-col hidden md:flex">
-        <div class="p-6 flex items-center space-x-2">
-            <div class="bg-blue-600 p-2 rounded-lg">
-                <i class='bx bxs-folder text-white text-xl'></i>
-            </div>
-            <span class="text-xl font-bold text-gray-800">HCC Drive</span>
-        </div>
-
-        <div class="px-4 mb-6">
-            <!-- Upload Button (Redirects to Dashboard) -->
-            <a href="<?= base_url('admin/dashboard') ?>" class="w-full flex items-center justify-center space-x-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 py-3 rounded-full shadow-sm transition-all font-medium decoration-transparent">
-                <i class='bx bx-upload text-xl'></i>
-                <span>New Upload</span>
-            </a>
-        </div>
-
-        <nav class="flex-1 space-y-1 px-2">
-            <!-- My Drive (Now Inactive/Gray) -->
-            <a href="<?= base_url('admin/dashboard') ?>" class="flex items-center space-x-3 w-full px-4 py-2 rounded-r-full text-gray-600 hover:bg-gray-100 font-medium transition-colors">
-                <i class='bx bx-home-alt text-xl'></i>
-                <span>My Drive</span>
-            </a>
-            <a href="#" class="flex items-center space-x-3 w-full px-4 py-2 rounded-r-full text-gray-600 hover:bg-gray-100 font-medium transition-colors">
-                <i class='bx bx-group text-xl'></i>
-                <span>Shared with me</span>
-            </a>
-            
-            <div class="border-t border-gray-100 my-4 pt-4"></div>
-            <p class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Admin Panel</p>
-            
-            <!-- Manage Users (Now Active/Blue) -->
-            <a href="#" class="flex items-center space-x-3 w-full px-4 py-2 rounded-r-full bg-blue-100 text-blue-700 font-medium transition-colors">
-                <i class='bx bx-user text-xl'></i>
-                <span>Manage Users</span>
-            </a>
-            <a href="#" class="flex items-center space-x-3 w-full px-4 py-2 rounded-r-full text-gray-600 hover:bg-gray-100 font-medium transition-colors">
-                <i class='bx bx-cog text-xl'></i>
-                <span>Settings</span>
-            </a>
-        </nav>
-
-        <div class="p-4 border-t border-gray-200">
-            <div class="bg-blue-50 rounded-lg p-3">
-                <p class="text-xs text-blue-600 font-medium mb-1">Storage Used</p>
-                <div class="w-full bg-blue-200 rounded-full h-1.5 mb-2">
-                    <div class="bg-blue-600 h-1.5 rounded-full" style="width: 45%"></div>
-                </div>
-                <p class="text-xs text-gray-500">Unlimited Access</p>
-            </div>
-        </div>
-    </div>
+      <?= view('components/sidebar_admin'); ?>
 
     <!-- MAIN CONTENT -->
     <div class="flex-1 flex flex-col overflow-hidden">

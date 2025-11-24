@@ -25,6 +25,12 @@ $routes->group('faculty', ['filter' => 'authGuard'], function($routes){
     $routes->get('dashboard', 'Dashboard::faculty');
 });
 
+
+$routes->group('settings', ['filter' => 'authGuard'], function($routes){
+    $routes->get('/', 'Settings::index');       // View Page
+    $routes->post('update', 'Settings::update'); // Handle Form
+});
+
 $routes->post('/file/upload', 'FileHandler::upload', ['filter' => 'authGuard']);
 $routes->get('/file/download/(:num)', 'FileHandler::download/$1', ['filter' => 'authGuard']);
 $routes->get('/file/delete/(:num)', 'FileHandler::delete/$1', ['filter' => 'authGuard']);

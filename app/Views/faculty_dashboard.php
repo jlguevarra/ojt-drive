@@ -16,40 +16,7 @@
 <body class="bg-gray-50 h-screen flex overflow-hidden">
 
     <!-- SIDEBAR -->
-    <div class="w-64 bg-white border-r border-gray-200 flex flex-col hidden md:flex">
-        <div class="p-6 flex items-center space-x-2">
-            <div class="bg-green-600 p-2 rounded-lg">
-                <i class='bx bxs-folder text-white text-xl'></i>
-            </div>
-            <span class="text-xl font-bold text-gray-800">HCC Drive</span>
-        </div>
-
-        <!-- No Upload Button for Faculty -->
-        <div class="px-4 mb-6">
-            <div class="w-full flex items-center justify-center space-x-2 bg-gray-100 text-gray-500 py-3 rounded-full font-medium cursor-default">
-                <i class='bx bx-lock-alt text-xl'></i>
-                <span>Read Only Mode</span>
-            </div>
-        </div>
-
-        <nav class="flex-1 space-y-1 px-2">
-            <a href="#" class="flex items-center space-x-3 w-full px-4 py-2 rounded-r-full bg-green-100 text-green-700 font-medium">
-                <i class='bx bx-home-alt text-xl'></i>
-                <span>Shared Files</span>
-            </a>
-            <a href="#" class="flex items-center space-x-3 w-full px-4 py-2 rounded-r-full text-gray-600 hover:bg-gray-100 font-medium">
-                <i class='bx bx-star text-xl'></i>
-                <span>Starred</span>
-            </a>
-        </nav>
-
-        <div class="p-4 border-t border-gray-200">
-            <div class="bg-green-50 rounded-lg p-3">
-                <p class="text-xs text-green-600 font-medium mb-1">Account Type</p>
-                <p class="text-xs text-gray-500">Faculty Access</p>
-            </div>
-        </div>
-    </div>
+    <?= view('components/sidebar_faculty'); ?>
 
     <!-- MAIN CONTENT -->
     <div class="flex-1 flex flex-col overflow-hidden">
@@ -57,11 +24,20 @@
         <!-- HEADER -->
         <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 shadow-sm z-10">
             <div class="flex items-center flex-1 max-w-2xl">
-                <div class="relative w-full">
+                <!-- UPDATED SEARCH BAR CONTAINER -->
+                <div class="relative w-full group">
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i class='bx bx-search text-gray-400 text-xl'></i>
+                        <i class='bx bx-search text-gray-400 text-xl group-focus-within:text-green-500 transition-colors'></i>
                     </span>
-                    <input type="text" placeholder="Search shared files..." class="block w-full pl-10 pr-3 py-2 border-none rounded-lg bg-gray-100 focus:ring-2 focus:ring-green-500 focus:bg-white transition-colors text-sm">
+                    
+                    <input type="text" id="searchInput" onkeyup="filterFiles()" 
+                           placeholder="Search shared files..." 
+                           class="block w-full pl-10 pr-10 py-2 border-none rounded-lg bg-gray-100 focus:ring-2 focus:ring-green-500 focus:bg-white transition-colors text-sm">
+                    
+                    <!-- Clear Button -->
+                    <button id="clearBtn" onclick="clearSearch()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-red-500 hidden cursor-pointer transition-colors">
+                        <i class='bx bx-x-circle text-xl'></i>
+                    </button>
                 </div>
             </div>
 
@@ -90,14 +66,14 @@
                 </div>
             </div>
 
-            <!-- FILES GRID -->
+            <!-- FILES GRID (Added ID) -->
             <h2 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">All Files</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div id="fileGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 
                 <?php if(!empty($files)): foreach($files as $file): ?>
                 
-                <!-- FILE CARD -->
-                <div class="bg-white p-4 rounded-xl border border-gray-200 hover:shadow-md transition-shadow flex flex-col justify-between h-40 relative group">
+                <!-- FILE CARD (Added class 'file-item') -->
+                <div class="file-item bg-white p-4 rounded-xl border border-gray-200 hover:shadow-md transition-shadow flex flex-col justify-between h-40 relative group">
                     <div class="flex justify-between items-start">
                         <div class="p-2 rounded-lg bg-green-100 text-green-600">
                             <i class='bx bxs-file-doc text-xl'></i>
@@ -105,7 +81,8 @@
                         <!-- No Delete Button here -->
                     </div>
                     <div>
-                        <h3 class="text-sm font-medium text-gray-700 truncate" title="<?= esc($file['filename']) ?>">
+                        <!-- FILENAME (Added class 'file-name') -->
+                        <h3 class="file-name text-sm font-medium text-gray-700 truncate" title="<?= esc($file['filename']) ?>">
                             <?= esc($file['filename']) ?>
                         </h3>
                         <div class="flex justify-between items-end mt-1">
@@ -119,9 +96,59 @@
                     <p class="text-gray-500 col-span-3">No files shared yet.</p>
                 <?php endif; ?>
 
+                <!-- No Results Hidden Message -->
+                <div id="noResults" class="hidden col-span-full text-center py-10 text-gray-400">
+                    <i class='bx bx-search text-4xl mb-2'></i>
+                    <p>No matching files found.</p>
+                </div>
+
             </div>
         </main>
     </div>
+
+    <!-- SCRIPTS -->
+    <script>
+        function filterFiles() {
+            let input = document.getElementById('searchInput');
+            let filter = input.value.toLowerCase();
+            let clearBtn = document.getElementById('clearBtn');
+            let fileGrid = document.getElementById('fileGrid');
+            let cards = fileGrid.getElementsByClassName('file-item');
+            let noResults = document.getElementById('noResults');
+            let visibleCount = 0;
+
+            if(filter.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+
+            for (let i = 0; i < cards.length; i++) {
+                let titleElement = cards[i].getElementsByClassName('file-name')[0];
+                let txtValue = titleElement.textContent || titleElement.innerText;
+                
+                if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                    cards[i].classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    cards[i].classList.add('hidden');
+                }
+            }
+
+            if(visibleCount === 0 && cards.length > 0) {
+                noResults.classList.remove('hidden');
+            } else {
+                noResults.classList.add('hidden');
+            }
+        }
+
+        function clearSearch() {
+            let input = document.getElementById('searchInput');
+            input.value = '';
+            filterFiles();
+            input.focus();
+        }
+    </script>
 
 </body>
 </html>
