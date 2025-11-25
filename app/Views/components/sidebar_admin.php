@@ -42,12 +42,13 @@
         <div class="border-t border-gray-100 my-4 pt-4"></div>
         <p class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Admin Panel</p>
         
-        <!-- Manage Users Link -->
-        <?php $isActive = (strpos($uri, 'users') !== false); ?>
-        <a href="<?= base_url('admin/users') ?>" class="flex items-center space-x-3 w-full px-4 py-2 rounded-r-full font-medium transition-colors <?= $isActive ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100' ?>">
-            <i class='bx bx-user text-xl'></i>
-            <span>Manage Users</span>
-        </a>
+        <!-- STRICT SECURITY CHECK: Only show if role is exactly 'admin' -->
+        <?php if(session()->get('role') === 'admin'): ?>
+            <a href="<?= base_url('admin/users') ?>" class="flex items-center space-x-3 w-full px-4 py-2 rounded-r-full font-medium transition-colors <?= (strpos($uri, 'users') !== false) ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100' ?>">
+                <i class='bx bx-user text-xl'></i>
+                <span>Manage Users</span>
+            </a>
+        <?php endif; ?>
 
         <!-- Settings Link -->
         <?php $isActive = (strpos($uri, 'settings') !== false); ?>
@@ -57,13 +58,4 @@
         </a>
     </nav>
 
-    <div class="p-4 border-t border-gray-200">
-        <div class="bg-blue-50 rounded-lg p-3">
-            <p class="text-xs text-blue-600 font-medium mb-1">Storage Used</p>
-            <div class="w-full bg-blue-200 rounded-full h-1.5 mb-2">
-                <div class="bg-blue-600 h-1.5 rounded-full" style="width: 45%"></div>
-            </div>
-            <p class="text-xs text-gray-500">Unlimited Access</p>
-        </div>
-    </div>
 </div>

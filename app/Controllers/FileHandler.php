@@ -9,40 +9,35 @@ class FileHandler extends BaseController
     {
         $session = session();
         
-        // 1. Validation
         $input = $this->validate([
-            'userfile' => 'uploaded[userfile]|max_size[userfile,2048]|ext_in[userfile,png,jpg,pdf,docx,xlsx]'
+            'userfile' => 'uploaded[userfile]|max_size[userfile,5120]|ext_in[userfile,png,jpg,jpeg,pdf,docx,xlsx,pptx,txt]',
+            'folder'   => 'required' // <--- Validation for folder
         ]);
 
         if (!$input) {
-            // Validation failed
-            return redirect()->back()->with('error', 'Invalid file or file too large.');
+            return redirect()->back()->with('error', 'Invalid file or folder.');
         } else {
-            // 2. Handle File Upload
             $img = $this->request->getFile('userfile');
             
             if($img->isValid() && !$img->hasMoved()){
-                // Generate a random name to prevent overwrite
                 $newName = $img->getRandomName(); 
                 $originalName = $img->getClientName();
-                
-                // Move to public/uploads
                 $img->move('uploads/', $newName);
 
-                // 3. Save to Database
                 $db = \Config\Database::connect();
                 $builder = $db->table('files');
                 
                 $data = [
-                    'user_id'   => $session->get('id'), // Who uploaded it?
-                    'filename'  => $originalName,      // Display name
-                    'file_path' => $newName,           // System name
-                    'file_size' => $img->getSizeByUnit('kb') . ' KB'
+                    'user_id'   => $session->get('id'),
+                    'filename'  => $originalName,
+                    'file_path' => $newName,
+                    'file_size' => $img->getSizeByUnit('kb') . ' KB',
+                    'folder'    => $this->request->getPost('folder') // <--- SAVE FOLDER CATEGORY
                 ];
                 
                 $builder->insert($data);
 
-                return redirect()->back()->with('success', 'File uploaded successfully!');
+                return redirect()->back()->with('success', 'File uploaded to ' . $data['folder']);
             }
         }
     }

@@ -37,9 +37,7 @@
                 </p>
             </div>
             
-            <!-- Bottom decorative circles -->
-            <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-            <div class="absolute bottom-0 right-0 -mb-10 -mr-10 w-40 h-40 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+            
         </div>
 
         <!-- Right Side: Login Form -->
