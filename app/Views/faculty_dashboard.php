@@ -24,7 +24,7 @@
         <!-- HEADER -->
         <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 shadow-sm z-10">
             <div class="flex items-center flex-1 max-w-2xl">
-                <!-- UPDATED SEARCH BAR CONTAINER -->
+                <!-- SEARCH BAR CONTAINER -->
                 <div class="relative w-full group">
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <i class='bx bx-search text-gray-400 text-xl group-focus-within:text-green-500 transition-colors'></i>
@@ -59,10 +59,38 @@
         <main class="flex-1 overflow-y-auto p-6">
             
             <div class="flex justify-between items-center mb-6">
-                <h1 class="text-2xl font-bold text-gray-800">Shared Repository</h1>
-                <div class="flex space-x-2">
-                     <button class="p-2 bg-gray-200 rounded hover:bg-gray-300"><i class='bx bx-list-ul'></i></button>
-                     <button class="p-2 bg-green-100 text-green-600 rounded"><i class='bx bx-grid-alt'></i></button>
+                <h1 class="text-2xl font-bold text-gray-800" id="pageTitle">Shared Repository</h1>
+                <div class="flex items-center space-x-3">
+                     <button onclick="resetFilters()" class="text-sm text-green-600 hover:underline font-medium">Show All Files</button>
+                     <div class="flex space-x-2">
+                        <button class="p-2 bg-gray-200 rounded hover:bg-gray-300"><i class='bx bx-list-ul'></i></button>
+                        <button class="p-2 bg-green-100 text-green-600 rounded"><i class='bx bx-grid-alt'></i></button>
+                     </div>
+                </div>
+            </div>
+
+            <!-- NEW FOLDERS GRID -->
+            <h2 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Browse by Category</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <!-- 201 File -->
+                <div onclick="filterByFolder('201 File')" class="bg-white p-4 rounded-xl border border-gray-200 hover:bg-green-50 cursor-pointer transition-colors flex items-center space-x-3 group">
+                    <i class='bx bxs-folder text-yellow-500 text-2xl group-hover:scale-110 transition-transform'></i>
+                    <span class="text-sm font-medium text-gray-700">201 File</span>
+                </div>
+                <!-- OBE - Syllabus -->
+                <div onclick="filterByFolder('OBE - Syllabus')" class="bg-white p-4 rounded-xl border border-gray-200 hover:bg-green-50 cursor-pointer transition-colors flex items-center space-x-3 group">
+                    <i class='bx bxs-folder text-yellow-500 text-2xl group-hover:scale-110 transition-transform'></i>
+                    <span class="text-sm font-medium text-gray-700">OBE - Syllabus</span>
+                </div>
+                <!-- Exam -->
+                <div onclick="filterByFolder('Exam')" class="bg-white p-4 rounded-xl border border-gray-200 hover:bg-green-50 cursor-pointer transition-colors flex items-center space-x-3 group">
+                    <i class='bx bxs-folder text-yellow-500 text-2xl group-hover:scale-110 transition-transform'></i>
+                    <span class="text-sm font-medium text-gray-700">Exam</span>
+                </div>
+                <!-- Teaching Materials -->
+                <div onclick="filterByFolder('Teaching Materials')" class="bg-white p-4 rounded-xl border border-gray-200 hover:bg-green-50 cursor-pointer transition-colors flex items-center space-x-3 group">
+                    <i class='bx bxs-folder text-yellow-500 text-2xl group-hover:scale-110 transition-transform'></i>
+                    <span class="text-sm font-medium text-gray-700">Teaching Materials</span>
                 </div>
             </div>
 
@@ -72,21 +100,21 @@
                 
                 <?php if(!empty($files)): foreach($files as $file): ?>
                 
-                <!-- FILE CARD (Added class 'file-item') -->
-                <div class="file-item bg-white p-4 rounded-xl border border-gray-200 hover:shadow-md transition-shadow flex flex-col justify-between h-40 relative group">
+                <!-- FILE CARD (Added class 'file-item' and 'data-folder') -->
+                <div class="file-item bg-white p-4 rounded-xl border border-gray-200 hover:shadow-md transition-shadow flex flex-col justify-between h-40 relative group"
+                     data-folder="<?= esc($file['folder'] ?? '201 File') ?>">
+                    
                     <div class="flex justify-between items-start">
                         <div class="p-2 rounded-lg bg-green-100 text-green-600">
                             <i class='bx bxs-file-doc text-xl'></i>
                         </div>
-                        <!-- No Delete Button here -->
                     </div>
                     <div>
-                        <!-- FILENAME (Added class 'file-name') -->
                         <h3 class="file-name text-sm font-medium text-gray-700 truncate" title="<?= esc($file['filename']) ?>">
                             <?= esc($file['filename']) ?>
                         </h3>
                         <div class="flex justify-between items-end mt-1">
-                            <p class="text-xs text-gray-500"><?= esc($file['file_size']) ?></p>
+                            <p class="text-xs text-gray-400 mr-2"><?= esc($file['folder'] ?? '') ?></p>
                             <a href="<?= base_url('file/download/'.$file['id']) ?>" class="text-green-600 hover:underline text-xs font-semibold">Download</a>
                         </div>
                     </div>
@@ -96,7 +124,6 @@
                     <p class="text-gray-500 col-span-3">No files shared yet.</p>
                 <?php endif; ?>
 
-                <!-- No Results Hidden Message -->
                 <div id="noResults" class="hidden col-span-full text-center py-10 text-gray-400">
                     <i class='bx bx-search text-4xl mb-2'></i>
                     <p>No matching files found.</p>
@@ -112,16 +139,12 @@
             let input = document.getElementById('searchInput');
             let filter = input.value.toLowerCase();
             let clearBtn = document.getElementById('clearBtn');
-            let fileGrid = document.getElementById('fileGrid');
-            let cards = fileGrid.getElementsByClassName('file-item');
+            let cards = document.getElementsByClassName('file-item');
             let noResults = document.getElementById('noResults');
             let visibleCount = 0;
 
-            if(filter.length > 0) {
-                clearBtn.classList.remove('hidden');
-            } else {
-                clearBtn.classList.add('hidden');
-            }
+            if(filter.length > 0) { clearBtn.classList.remove('hidden'); } 
+            else { clearBtn.classList.add('hidden'); }
 
             for (let i = 0; i < cards.length; i++) {
                 let titleElement = cards[i].getElementsByClassName('file-name')[0];
@@ -135,10 +158,34 @@
                 }
             }
 
-            if(visibleCount === 0 && cards.length > 0) {
-                noResults.classList.remove('hidden');
-            } else {
-                noResults.classList.add('hidden');
+            if(visibleCount === 0 && cards.length > 0) { noResults.classList.remove('hidden'); } 
+            else { noResults.classList.add('hidden'); }
+        }
+
+        function filterByFolder(folderName) {
+            let cards = document.getElementsByClassName('file-item');
+            document.getElementById('pageTitle').innerText = folderName; 
+            
+            // Clear text search
+            document.getElementById('searchInput').value = "";
+            document.getElementById('clearBtn').classList.add('hidden');
+
+            for (let i = 0; i < cards.length; i++) {
+                let fileFolder = cards[i].getAttribute('data-folder');
+                if (fileFolder === folderName) {
+                    cards[i].classList.remove('hidden');
+                } else {
+                    cards[i].classList.add('hidden');
+                }
+            }
+        }
+
+        function resetFilters() {
+            let cards = document.getElementsByClassName('file-item');
+            document.getElementById('pageTitle').innerText = "Shared Repository";
+            clearSearch();
+            for (let i = 0; i < cards.length; i++) {
+                cards[i].classList.remove('hidden');
             }
         }
 

@@ -9,9 +9,10 @@ class FileHandler extends BaseController
     {
         $session = session();
         
+        // 1. Validation including 'folder'
         $input = $this->validate([
             'userfile' => 'uploaded[userfile]|max_size[userfile,5120]|ext_in[userfile,png,jpg,jpeg,pdf,docx,xlsx,pptx,txt]',
-            'folder'   => 'required' // <--- Validation for folder
+            'folder'   => 'required' 
         ]);
 
         if (!$input) {
@@ -32,7 +33,7 @@ class FileHandler extends BaseController
                     'filename'  => $originalName,
                     'file_path' => $newName,
                     'file_size' => $img->getSizeByUnit('kb') . ' KB',
-                    'folder'    => $this->request->getPost('folder') // <--- SAVE FOLDER CATEGORY
+                    'folder'    => $this->request->getPost('folder') // <--- SAVE THE FOLDER
                 ];
                 
                 $builder->insert($data);
