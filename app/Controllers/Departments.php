@@ -1,51 +1,55 @@
 <?php namespace App\Controllers;
 
+use App\Models\DepartmentModel;
+
 class Departments extends BaseController {
     
-    // LIST DEPARTMENTS
-    public function index() {
-        if(session()->get('role') !== 'admin') return redirect()->to('admin/dashboard');
+    // Helper function to check permission
+    private function checkAccess() {
+        $role = session()->get('role');
+        return ($role === 'admin' || $role === 'program_chair');
+    }
 
-        $db = \Config\Database::connect();
-        $data['departments'] = $db->table('departments')->get()->getResultArray();
+    public function index() {
+        if(!$this->checkAccess()) return redirect()->to('admin/dashboard');
+
+        $model = new DepartmentModel();
+        $data['departments'] = $model->orderBy('id', 'DESC')->findAll();
         
         return view('manage_departments', $data);
     }
 
-    // CREATE
     public function create() {
-        if(session()->get('role') !== 'admin') return redirect()->back();
+        if(!$this->checkAccess()) return redirect()->back();
         
-        $db = \Config\Database::connect();
-        $db->table('departments')->insert([
+        $model = new DepartmentModel();
+        $model->save([
             'code' => $this->request->getPost('code'),
             'name' => $this->request->getPost('name')
         ]);
 
-        return redirect()->back()->with('success', 'Department added.');
+        return redirect()->back()->with('success', 'Department added successfully.');
     }
 
-    // UPDATE
     public function update() {
-        if(session()->get('role') !== 'admin') return redirect()->back();
+        if(!$this->checkAccess()) return redirect()->back();
 
-        $db = \Config\Database::connect();
+        $model = new DepartmentModel();
         $id = $this->request->getPost('id');
         
-        $db->table('departments')->where('id', $id)->update([
+        $model->update($id, [
             'code' => $this->request->getPost('code'),
             'name' => $this->request->getPost('name')
         ]);
 
-        return redirect()->back()->with('success', 'Department updated.');
+        return redirect()->back()->with('success', 'Department updated successfully.');
     }
 
-    // DELETE
     public function delete($id) {
-        if(session()->get('role') !== 'admin') return redirect()->back();
+        if(!$this->checkAccess()) return redirect()->back();
 
-        $db = \Config\Database::connect();
-        $db->table('departments')->where('id', $id)->delete();
+        $model = new DepartmentModel();
+        $model->delete($id);
 
         return redirect()->back()->with('success', 'Department deleted.');
     }

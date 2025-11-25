@@ -24,6 +24,13 @@ $routes->group('admin', ['filter' => 'authGuard'], function($routes){
     $routes->get('deleteUser/(:num)', 'Dashboard::deleteUser/$1'); // Delete User Action
     $routes->post('createUser', 'Dashboard::createUser');
     $routes->post('updateUser', 'Dashboard::updateUser');
+
+
+    // DEPARTMENT ROUTES
+    $routes->get('departments', 'Departments::index');
+    $routes->post('departments/create', 'Departments::create');
+    $routes->post('departments/update', 'Departments::update');
+    $routes->get('departments/delete/(:num)', 'Departments::delete/$1');
 });
 
 // 4. FACULTY ROUTES (Protected by 'authGuard')
