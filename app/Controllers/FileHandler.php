@@ -9,10 +9,9 @@ class FileHandler extends BaseController
     {
         $session = session();
         
-        // 1. Validation including 'folder'
         $input = $this->validate([
-            'userfile' => 'uploaded[userfile]|max_size[userfile,5120]|ext_in[userfile,png,jpg,jpeg,pdf,docx,xlsx,pptx,txt]',
-            'folder'   => 'required' 
+            'userfile' => 'uploaded[userfile]|max_size[userfile,10240]|ext_in[userfile,png,jpg,jpeg,pdf,docx,xlsx,pptx,txt]',
+            'folder'   => 'required'
         ]);
 
         if (!$input) {
@@ -25,24 +24,29 @@ class FileHandler extends BaseController
                 $originalName = $img->getClientName();
                 $img->move('uploads/', $newName);
 
+                // 1. Get Current User's Department
+                $userModel = new UserModel();
+                $currentUser = $userModel->find($session->get('id'));
+                $deptId = $currentUser['department_id']; // This might be null if Admin
+
                 $db = \Config\Database::connect();
                 $builder = $db->table('files');
                 
                 $data = [
-                    'user_id'   => $session->get('id'),
-                    'filename'  => $originalName,
-                    'file_path' => $newName,
-                    'file_size' => $img->getSizeByUnit('kb') . ' KB',
-                    'folder'    => $this->request->getPost('folder') // <--- SAVE THE FOLDER
+                    'user_id'       => $session->get('id'),
+                    'department_id' => $deptId, // <--- CRITICAL: Tag the file to the department
+                    'filename'      => $originalName,
+                    'file_path'     => $newName,
+                    'file_size'     => $img->getSizeByUnit('kb') . ' KB',
+                    'folder'        => $this->request->getPost('folder')
                 ];
                 
                 $builder->insert($data);
 
-                return redirect()->back()->with('success', 'File uploaded to ' . $data['folder']);
+                return redirect()->back()->with('success', 'File uploaded successfully.');
             }
         }
     }
-
     public function download($id)
     {
         $db = \Config\Database::connect();

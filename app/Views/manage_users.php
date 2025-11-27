@@ -13,7 +13,6 @@
     <?= view('components/sidebar_admin'); ?>
 
     <div class="flex-1 flex flex-col overflow-hidden">
-        <!-- HEADER -->
         <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 shadow-sm z-10">
             <div class="flex items-center space-x-2 text-gray-500 text-sm">
                 <span>Admin Panel</span>
@@ -26,9 +25,7 @@
             </div>
         </header>
 
-        <!-- CONTENT -->
         <main class="flex-1 overflow-y-auto p-8">
-            <!-- Alerts -->
             <?php if(session()->getFlashdata('success')):?>
                 <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 flex items-center"><i class='bx bx-check-circle mr-2 text-xl'></i><?= session()->getFlashdata('success') ?></div>
             <?php endif;?>
@@ -49,6 +46,7 @@
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">User Profile</th>
                             <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Role</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Department</th>
                             <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Email</th>
                             <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase">Actions</th>
                         </tr>
@@ -72,14 +70,23 @@
                                     <?= ucfirst(str_replace('_', ' ', $user['role'])) ?>
                                 </span>
                             </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <?php if(!empty($user['dept_code'])): ?>
+                                    <span class="px-2 py-1 text-xs font-bold text-blue-700 bg-blue-50 rounded border border-blue-200">
+                                        <?= esc($user['dept_code']) ?>
+                                    </span>
+                                <?php else: ?>
+                                    <span class="text-gray-400 text-xs">-</span>
+                                <?php endif; ?>
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><?= esc($user['email']) ?></td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                <button onclick='openEditModal(<?= json_encode($user) ?>)' class="text-blue-600 hover:text-blue-900 bg-blue-50 p-2 rounded hover:bg-blue-100"><i class='bx bx-edit'></i></button>
-                                <a href="<?= base_url('admin/deleteUser/'.$user['id']) ?>" onclick="return confirm('Delete this user?')" class="text-red-600 hover:text-red-900 bg-red-50 p-2 rounded hover:bg-red-100"><i class='bx bx-trash'></i></a>
+                                <button onclick='openEditModal(<?= json_encode($user) ?>)' class="text-blue-600 hover:text-blue-900 bg-blue-50 p-2 rounded hover:bg-blue-100 transition-colors"><i class='bx bx-edit'></i></button>
+                                <a href="<?= base_url('admin/deleteUser/'.$user['id']) ?>" onclick="return confirm('Delete this user?')" class="text-red-600 hover:text-red-900 bg-red-50 p-2 rounded hover:bg-red-100 transition-colors"><i class='bx bx-trash'></i></a>
                             </td>
                         </tr>
                         <?php endforeach; else: ?>
-                        <tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">No users found.</td></tr>
+                        <tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">No users found.</td></tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -107,14 +114,29 @@
                     <label class="block text-sm font-medium text-gray-700">Password</label>
                     <input type="password" name="password" required class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
+                
+                <!-- ROLE SELECT with OnChange event -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Role</label>
-                    <select name="role" class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <select name="role" id="create_role" onchange="toggleDepartment('create_role', 'create_dept_container')" class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none">
                         <option value="faculty">Faculty</option>
                         <option value="program_chair">Program Chair</option>
                         <option value="admin">Administrator</option>
                     </select>
                 </div>
+
+                <!-- DEPARTMENT DROPDOWN (Hidden for Admin) -->
+                <div id="create_dept_container">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Department <span class="text-red-500">*</span></label>
+                    <select name="department_id" id="create_dept_select" class="w-full border rounded px-3 py-2 bg-gray-50">
+                        <option value="">-- Select Department --</option>
+                        <?php if(!empty($departments)): foreach($departments as $dept): ?>
+                            <option value="<?= $dept['id'] ?>"><?= $dept['code'] ?> - <?= $dept['name'] ?></option>
+                        <?php endforeach; endif; ?>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Required for Faculty and Program Chairs.</p>
+                </div>
+
                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition-colors">Create User</button>
             </form>
         </div>
@@ -141,28 +163,66 @@
                     <label class="block text-sm font-medium text-gray-700">New Password (Optional)</label>
                     <input type="password" name="password" placeholder="Leave blank to keep current" class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
+                
+                <!-- ROLE SELECT with OnChange event -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Role</label>
-                    <select name="role" id="edit_role" class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <select name="role" id="edit_role" onchange="toggleDepartment('edit_role', 'edit_dept_container')" class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none">
                         <option value="faculty">Faculty</option>
                         <option value="program_chair">Program Chair</option>
                         <option value="admin">Administrator</option>
                     </select>
                 </div>
+
+                <!-- DEPARTMENT DROPDOWN (Hidden for Admin) -->
+                <div id="edit_dept_container">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Department <span class="text-red-500">*</span></label>
+                    <select name="department_id" id="edit_department_id" class="w-full border rounded px-3 py-2 bg-gray-50">
+                        <option value="">-- Select Department --</option>
+                        <?php if(!empty($departments)): foreach($departments as $dept): ?>
+                            <option value="<?= $dept['id'] ?>"><?= $dept['code'] ?> - <?= $dept['name'] ?></option>
+                        <?php endforeach; endif; ?>
+                    </select>
+                </div>
+
                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition-colors">Update User</button>
             </form>
         </div>
     </div>
 
     <script>
-        function openCreateModal() { document.getElementById('createModal').classList.remove('hidden'); }
+        // LOGIC TO HIDE/SHOW DEPARTMENT
+        function toggleDepartment(roleSelectId, deptContainerId) {
+            const role = document.getElementById(roleSelectId).value;
+            const container = document.getElementById(deptContainerId);
+            const select = container.querySelector('select');
+
+            if (role === 'admin') {
+                container.classList.add('hidden'); // Hide container
+                select.value = ""; // Clear selection so logic doesn't get confused
+            } else {
+                container.classList.remove('hidden'); // Show container
+            }
+        }
+
+        function openCreateModal() { 
+            document.getElementById('createModal').classList.remove('hidden');
+            // Run check immediately in case default is 'admin' (unlikely but safe)
+            toggleDepartment('create_role', 'create_dept_container'); 
+        }
+        
         function openEditModal(user) {
             document.getElementById('edit_user_id').value = user.id;
             document.getElementById('edit_username').value = user.username;
             document.getElementById('edit_email').value = user.email;
             document.getElementById('edit_role').value = user.role;
+            document.getElementById('edit_department_id').value = user.department_id || "";
+            
+            // Check Role status immediately to Show/Hide Dept
+            toggleDepartment('edit_role', 'edit_dept_container');
+
             document.getElementById('editModal').classList.remove('hidden');
         }
     </script>
 </body>
-</html>
+</html> 
