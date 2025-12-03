@@ -1,0 +1,2 @@
+https://developer.edamam.com/food-database-api
+https://spoonacular.com/food-api

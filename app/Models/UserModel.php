@@ -1,10 +1,18 @@
 <?php namespace App\Models;
 use CodeIgniter\Model;
 
-// User model to interact with users table
 class UserModel extends Model {
     protected $table = 'users';
-    protected $allowedFields = ['username', 'email', 'password', 'role'];
+    protected $primaryKey = 'id';
+    
+    // CRITICAL FIX: Added 'department_id' here
+    protected $allowedFields = [
+        'username', 
+        'email', 
+        'password', 
+        'role', 
+        'department_id'
+    ];
     
     // Helper to check if user is admin or chair
     public function isAdminOrChair($role) {

@@ -24,12 +24,14 @@ $routes->group('admin', ['filter' => 'authGuard'], function($routes){
     $routes->post('createUser', 'Dashboard::createUser');
     $routes->post('updateUser', 'Dashboard::updateUser');
 
+    // 8. ACTIVITY LOGS
+    $routes->get('logs', 'Dashboard::logs');
+
     // THIS shows the page at /admin/departments (Matches your sidebar)
     $routes->get('departments', 'Departments::index'); 
 });
 
 // 4. DEPARTMENT ACTIONS (Prefix: /departments/...)
-// These are OUTSIDE 'admin' group so they match your form action: base_url('departments/create')
 $routes->group('departments', ['filter' => 'authGuard'], function($routes){
     $routes->post('create', 'Departments::create');
     $routes->post('update', 'Departments::update');
@@ -41,10 +43,16 @@ $routes->group('faculty', ['filter' => 'authGuard'], function($routes){
     $routes->get('dashboard', 'Dashboard::faculty');
 });
 
-// 6. FILE HANDLING
+// 6. FILE & FOLDER HANDLING
 $routes->post('/file/upload', 'FileHandler::upload', ['filter' => 'authGuard']);
 $routes->get('/file/download/(:num)', 'FileHandler::download/$1', ['filter' => 'authGuard']);
 $routes->get('/file/delete/(:num)', 'FileHandler::delete/$1', ['filter' => 'authGuard']);
+$routes->get('/file/preview/(:num)', 'FileHandler::preview/$1', ['filter' => 'authGuard']);
+
+// [NEW] FOLDER ROUTES
+$routes->post('/folder/create', 'FileHandler::create_folder', ['filter' => 'authGuard']);
+$routes->get('/folder/delete/(:num)', 'FileHandler::delete_folder/$1', ['filter' => 'authGuard']);
+
 
 // 7. SETTINGS
 $routes->group('settings', ['filter' => 'authGuard'], function($routes){

@@ -13,7 +13,7 @@ class Auth extends BaseController {
         $model = new UserModel();
         $email = $this->request->getVar('email');
         $password = $this->request->getVar('password');
-        
+        helper(['form', 'log']); // <--- LOAD HELPER
         $data = $model->where('email', $email)->first();
         
         if($data){
@@ -29,6 +29,8 @@ class Auth extends BaseController {
                     'logged_in'=> TRUE
                 ];
                 $session->set($ses_data);
+                save_log('Login', 'User logged into the system.');
+
                 
                 // ROLE BASED REDIRECTION
                 // Admin and Chair go to same dashboard

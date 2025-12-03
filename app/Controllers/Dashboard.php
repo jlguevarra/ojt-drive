@@ -1,61 +1,157 @@
 <?php namespace App\Controllers;
 
 use App\Models\UserModel;
+use App\Models\FolderModel; // 1. Load Folder Model
 
 class Dashboard extends BaseController {
-    
+        
     // --- DASHBOARD: ADMIN & CHAIR ---
     public function admin() {
         $session = session();
         $role = $session->get('role');
 
-        // Redirect Faculty away
         if($role == 'faculty'){ return redirect()->to('/faculty/dashboard'); }
         
         $db = \Config\Database::connect();
-        $builder = $db->table('files');
+        $folderModel = new FolderModel();
+        $userModel = new UserModel();
+        
+        // Get Current User Details (to check their department)
+        $currentUser = $userModel->find($session->get('id'));
+        $userDeptId = $currentUser['department_id'] ?? null;
 
-        // 1. ISOLATION LOGIC
-        if($role === 'program_chair') {
-            // Program Chair: MUST filter by their Department
-            $userModel = new UserModel();
-            $user = $userModel->find($session->get('id'));
-            
-            if(!empty($user['department_id'])) {
-                $builder->where('department_id', $user['department_id']);
-            } else {
-                // Safety: If Chair has no dept, show NOTHING (prevents leaking info)
-                $builder->where('id', -1); 
+        // --- A. FOLDER LOGIC ---
+        $currentFolderId = $this->request->getGet('folder_id');
+        $currentFolderId = !empty($currentFolderId) ? $currentFolderId : null;
+
+        // Start Query for Folders
+        $folderBuilder = $folderModel->where('parent_id', $currentFolderId);
+
+        // [RESTRICTION 1] If Program Chair -> SHOW ONLY OWN DEPT FOLDERS
+        if($role === 'program_chair' && $userDeptId) {
+            $folderBuilder->where('department_id', $userDeptId);
+        }
+
+        // [RESTRICTION 2] If Admin selects a Dept from Dropdown -> FILTER FOLDERS
+        $filterDept = $this->request->getGet('dept');
+        if($role === 'admin' && !empty($filterDept)) {
+            $folderBuilder->where('department_id', $filterDept);
+        }
+
+        $data['folders'] = $folderBuilder->findAll();
+
+        // Breadcrumbs Logic (Unchanged)
+        $breadcrumbs = [];
+        if ($currentFolderId) {
+            $tempId = $currentFolderId;
+            while ($tempId) {
+                $folder = $folderModel->find($tempId);
+                if ($folder) {
+                    array_unshift($breadcrumbs, ['id' => $folder['id'], 'name' => $folder['name']]);
+                    $tempId = $folder['parent_id'];
+                } else { break; }
             }
         }
-        // Admin: No 'where' clause needed. They see everything.
+        $data['breadcrumbs'] = $breadcrumbs;
+        $data['current_folder_id'] = $currentFolderId;
 
-        // 2. SEARCH & FILTER
+
+        // --- B. FILE LOGIC (Modified to match Folders) ---
+        $fileBuilder = $db->table('files');
+        $fileBuilder->select('files.*, departments.code as dept_code');
+        $fileBuilder->join('departments', 'departments.id = files.department_id', 'left');
+
+        // Filter by Current Folder
+        if($currentFolderId){
+            $fileBuilder->where('files.folder_id', $currentFolderId);
+        } else {
+            $fileBuilder->where('files.folder_id', NULL);
+        }
+
+        // [RESTRICTION 1] Program Chair -> SHOW ONLY OWN DEPT FILES
+        if($role === 'program_chair') {
+            if($userDeptId) {
+                $fileBuilder->where('files.department_id', $userDeptId);
+            } else {
+                $fileBuilder->where('files.id', -1); // No dept assigned = see nothing
+            }
+        }
+
+        // [RESTRICTION 2] Admin Filter
+        if($role === 'admin' && !empty($filterDept)) {
+            $fileBuilder->where('files.department_id', $filterDept);
+        }
+
+        // Search Logic
         $search = $this->request->getGet('q');
-        if(!empty($search)){ $builder->like('filename', $search); }
+        if(!empty($search)){ $fileBuilder->like('filename', $search); }
 
-        $data['files'] = $builder->orderBy('created_at', 'DESC')->get()->getResultArray();
+        $data['files'] = $fileBuilder->orderBy('files.created_at', 'DESC')->get()->getResultArray();
         $data['search_term'] = $search;
+        
+        // Admin Dropdown Data
+        if($role === 'admin') {
+            $data['departments'] = $db->table('departments')->get()->getResultArray();
+            $data['selected_dept'] = $filterDept;
+        }
 
         return view('admin_dashboard', $data);
     }
 
-    // --- DASHBOARD: FACULTY ---
     public function faculty() {
         $session = session();
         $db = \Config\Database::connect();
-        $builder = $db->table('files');
+        $userModel = new \App\Models\UserModel();
+        $folderModel = new \App\Models\FolderModel(); // 1. Load Folder Model
 
-        // Faculty: MUST filter by their Department
-        $userModel = new UserModel();
+        // Get Current User & Department
         $user = $userModel->find($session->get('id'));
-        
-        if(!empty($user['department_id'])) {
-            $builder->where('department_id', $user['department_id']);
-        } else {
-            $builder->where('id', -1); // Show nothing if no dept assigned
+        $userDeptId = $user['department_id'] ?? null;
+
+        // If no department assigned, show empty view
+        if(empty($userDeptId)) {
+            return view('faculty_dashboard', ['files' => [], 'folders' => []]);
         }
 
+        // --- A. FOLDER LOGIC ---
+        $currentFolderId = $this->request->getGet('folder_id');
+        $currentFolderId = !empty($currentFolderId) ? $currentFolderId : null;
+
+        // Fetch Folders: Must match Parent ID AND User's Department
+        $data['folders'] = $folderModel->where('parent_id', $currentFolderId)
+                                       ->where('department_id', $userDeptId)
+                                       ->findAll();
+
+        // Generate Breadcrumbs
+        $breadcrumbs = [];
+        if ($currentFolderId) {
+            $tempId = $currentFolderId;
+            while ($tempId) {
+                $folder = $folderModel->find($tempId);
+                if ($folder) {
+                    array_unshift($breadcrumbs, ['id' => $folder['id'], 'name' => $folder['name']]);
+                    $tempId = $folder['parent_id'];
+                } else { break; }
+            }
+        }
+        $data['breadcrumbs'] = $breadcrumbs;
+        $data['current_folder_id'] = $currentFolderId;
+
+
+        // --- B. FILE LOGIC ---
+        $builder = $db->table('files');
+        
+        // Filter by Department
+        $builder->where('department_id', $userDeptId);
+
+        // Filter by Folder (Inside folder vs Root)
+        if($currentFolderId){
+            $builder->where('folder_id', $currentFolderId);
+        } else {
+            $builder->where('folder_id', NULL);
+        }
+
+        // Search Logic
         $search = $this->request->getGet('q');
         if(!empty($search)){ $builder->like('filename', $search); }
 
@@ -64,8 +160,7 @@ class Dashboard extends BaseController {
         
         return view('faculty_dashboard', $data);
     }
-
-    // --- USER MANAGEMENT ---
+    // --- USER MANAGEMENT (Unchanged) ---
     public function users() {
         $session = session();
         if($session->get('role') !== 'admin') return redirect()->to('/admin/dashboard');
@@ -92,7 +187,6 @@ class Dashboard extends BaseController {
         if(session()->get('role') !== 'admin') return redirect()->back();
         $model = new UserModel();
         
-        // 1. Define Rules
         $rules = [
             'username' => 'required|min_length[3]',
             'email'    => 'required|valid_email|is_unique[users.email]',
@@ -100,14 +194,12 @@ class Dashboard extends BaseController {
             'role'     => 'required'
         ];
 
-        // 2. CONDITIONAL RULE: If Chair or Faculty, Department is REQUIRED
         $role = $this->request->getPost('role');
         if ($role === 'program_chair' || $role === 'faculty') {
-            $rules['department_id'] = 'required'; // Must select a value
+            $rules['department_id'] = 'required'; 
         }
 
         if (!$this->validate($rules)) {
-            // Return specific errors so you know WHY it failed
             return redirect()->back()->with('error', implode(" ", $this->validator->getErrors()));
         }
 
@@ -148,5 +240,12 @@ class Dashboard extends BaseController {
         $db->table('files')->where('user_id', $id)->delete();
         $db->table('users')->where('id', $id)->delete();
         return redirect()->back()->with('success', 'User deleted.');
+    }
+
+    public function logs() {
+        if(session()->get('role') !== 'admin') return redirect()->to('/admin/dashboard');
+        $model = new \App\Models\LogModel();
+        $data['logs'] = $model->orderBy('created_at', 'DESC')->findAll();
+        return view('activity_logs', $data);
     }
 }
