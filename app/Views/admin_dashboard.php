@@ -54,9 +54,10 @@
                 <div class="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
                     <?= substr(session()->get('username'), 0, 1) ?>
                 </div>
-                <a href="<?= base_url('/logout') ?>" class="text-gray-500 hover:text-red-600 transition-colors" title="Logout">
+                
+                <button onclick="openLogoutModal()" class="text-gray-500 hover:text-red-600 transition-colors" title="Logout">
                     <i class='bx bx-log-out text-2xl'></i>
-                </a>
+                </button>
             </div>
         </header>
 
@@ -109,9 +110,16 @@
                 <a href="<?= base_url('admin/dashboard?folder_id='.$folder['id']) ?>" class="block group">
                     <div class="bg-white p-4 rounded-xl border border-gray-200 hover:bg-blue-50 hover:border-blue-200 cursor-pointer transition-all flex items-center space-x-3 relative">
                         <i class='bx bxs-folder text-yellow-500 text-3xl group-hover:scale-110 transition-transform'></i>
-                        <span class="text-sm font-medium text-gray-700 truncate w-full" title="<?= esc($folder['name']) ?>">
+                        
+                        <span class="text-sm font-medium text-gray-700 truncate flex-1" title="<?= esc($folder['name']) ?>">
                             <?= esc($folder['name']) ?>
                         </span>
+
+                        <?php if(session()->get('role') === 'admin' && !empty($folder['dept_code'])): ?>
+                            <span class="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-1 rounded border border-gray-200" title="Department">
+                                <?= esc($folder['dept_code']) ?>
+                            </span>
+                        <?php endif; ?>
                         
                         <object class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                             <a href="<?= base_url('folder/delete/'.$folder['id']) ?>" onclick="return confirm('Delete folder and all contents?')" class="text-gray-400 hover:text-red-500 p-1">
@@ -135,7 +143,8 @@
                             <div class="p-2 rounded-lg bg-blue-100 text-blue-600">
                                 <i class='bx bxs-file-doc text-xl'></i>
                             </div>
-                            <?php if(!empty($file['dept_code'])): ?>
+                            
+                            <?php if(session()->get('role') === 'admin' && !empty($file['dept_code'])): ?>
                                 <span class="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-1 rounded border border-gray-200">
                                     <?= esc($file['dept_code']) ?>
                                 </span>
@@ -188,7 +197,6 @@
             <h3 class="text-lg font-bold text-gray-800 mb-4">Create New Folder</h3>
             <form action="<?= base_url('/folder/create') ?>" method="post">
                 <input type="hidden" name="parent_id" value="<?= esc($current_folder_id ?? '') ?>">
-                
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Folder Name</label>
                     <input type="text" name="folder_name" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g., Midterms" required autofocus>
@@ -208,14 +216,11 @@
                 <button onclick="closeUploadModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
             </div>
             <form action="<?= base_url('/file/upload') ?>" method="post" enctype="multipart/form-data">
-                
                 <input type="hidden" name="folder_id" value="<?= esc($current_folder_id ?? '') ?>">
-                
                 <p class="text-sm text-gray-600 mb-4 bg-gray-50 p-3 rounded border border-gray-200">
                     <i class='bx bx-folder-open mr-1 align-middle text-yellow-500'></i>
                     Uploading to: <strong><?= !empty($breadcrumbs) ? esc(end($breadcrumbs)['name']) : 'My Drive' ?></strong>
                 </p>
-
                 <div class="mb-6 border-2 border-dashed border-blue-300 rounded-lg p-8 text-center hover:bg-blue-50 transition-colors cursor-pointer relative group">
                     <input type="file" name="userfile" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" required onchange="updateFileName(this)">
                     <div class="space-y-2">
@@ -230,6 +235,20 @@
                     <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-500/30 font-medium transition-colors">Upload File</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div id="logoutModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-80 transform scale-100 transition-transform text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                <i class='bx bx-log-out text-2xl text-red-600'></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-800 mb-2">Confirm Logout</h3>
+            <p class="text-sm text-gray-500 mb-6">Are you sure you want to sign out of your account?</p>
+            <div class="flex justify-center space-x-3">
+                <button onclick="closeLogoutModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium transition-colors">Cancel</button>
+                <a href="<?= base_url('/logout') ?>" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium shadow-md shadow-red-500/30 transition-colors">Logout</a>
+            </div>
         </div>
     </div>
 
@@ -276,6 +295,10 @@
         }
         function closeFolderModal() { document.getElementById('folderModal').classList.add('hidden'); }
 
+        // [NEW] LOGOUT LOGIC
+        function openLogoutModal() { document.getElementById('logoutModal').classList.remove('hidden'); }
+        function closeLogoutModal() { document.getElementById('logoutModal').classList.add('hidden'); }
+
         // --- PREVIEW LOGIC ---
         function openPreview(id, filename) {
             document.getElementById('previewModal').classList.remove('hidden');
@@ -307,7 +330,7 @@
             document.getElementById('previewFrame').src = "";
         }
 
-        // --- SEARCH LOGIC (Client-side) ---
+        // --- SEARCH LOGIC ---
         function filterFiles() {
             let input = document.getElementById('searchInput');
             let filter = input.value.toLowerCase();

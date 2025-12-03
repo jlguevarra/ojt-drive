@@ -2,37 +2,48 @@
 
 use CodeIgniter\Controller;
 use App\Models\UserModel;
-use App\Models\FolderModel; // 1. Load Folder Model
+use App\Models\FolderModel; 
+use App\Models\FileModel; // 1. Load the new FileModel
 
 class FileHandler extends BaseController
 {
-    // --- 1. Create Folder (Now saves Department ID) ---
+    // --- 1. Create Folder ---
     public function create_folder()
     {
         $session = session();
-        if($session->get('role') == 'faculty') { return redirect()->back()->with('error', 'Unauthorized'); }
+        helper('log'); 
+
+        if($session->get('role') == 'faculty') { 
+            return redirect()->back()->with('error', 'Unauthorized'); 
+        }
 
         $folderModel = new FolderModel();
         $userModel = new UserModel();
 
         // Get User's Department
         $user = $userModel->find($session->get('id'));
-        $deptId = $user['department_id'] ?? null; // If Admin has no dept, this is null (Global folder)
+        $deptId = $user['department_id'] ?? null; 
 
         $parentId = $this->request->getPost('parent_id');
         $parentId = !empty($parentId) ? $parentId : null;
+        $folderName = $this->request->getPost('folder_name');
 
         $data = [
-            'name'          => $this->request->getPost('folder_name'),
+            'name'          => $folderName,
             'parent_id'     => $parentId,
-            'department_id' => $deptId // <--- THIS IS KEY
+            'department_id' => $deptId
         ];
 
         $folderModel->save($data);
+
+        // Logging
+        $location = !empty($parentId) ? "Folder ID: $parentId" : "Root Directory";
+        save_log('Create Folder', "Created folder '$folderName' in $location");
+
         return redirect()->back()->with('success', 'Folder created successfully');
     }
 
-    // --- 2. Upload (Unchanged, just ensure Department ID logic is safe) ---
+    // --- 2. Upload File (Updated) ---
     public function upload()
     {
         $session = session();
@@ -54,15 +65,13 @@ class FileHandler extends BaseController
 
                 $userModel = new UserModel();
                 $currentUser = $userModel->find($session->get('id'));
-                
-                // Program Chair uploads get tagged with their Dept
                 $deptId = $currentUser['department_id'] ?? null; 
 
                 $folderId = $this->request->getPost('folder_id');
                 $folderId = !empty($folderId) ? $folderId : null;
 
-                $db = \Config\Database::connect();
-                $builder = $db->table('files');
+                // [UPDATED] Use FileModel instead of Builder
+                $fileModel = new FileModel();
                 
                 $data = [
                     'user_id'       => $session->get('id'),
@@ -71,81 +80,92 @@ class FileHandler extends BaseController
                     'file_path'     => $newName,
                     'file_size'     => $img->getSizeByUnit('kb') . ' KB',
                     'folder_id'     => $folderId
+                    // REMOVED: 'folder' => ... (No longer needed)
                 ];
                 
-                $builder->insert($data);
+                $fileModel->save($data);
                 
-                $folderName = $folderId ? 'Folder ID: '.$folderId : 'Root';
-                save_log('Upload', 'Uploaded file: ' . $originalName . ' to ' . $folderName);
+                // Logging
+                $location = !empty($folderId) ? "Folder ID: $folderId" : "Root Directory";
+                save_log('Upload', "Uploaded file '$originalName' to $location");
                 
                 return redirect()->back()->with('success', 'File uploaded successfully.');
             }
         }
     }
 
-    // --- 3. NEW: Delete Folder Function ---
+    // --- 3. Delete Folder ---
     public function delete_folder($id)
     {
-        // Only Admin/Chair
-        if(session()->get('role') == 'faculty') { return redirect()->back()->with('error', 'Unauthorized'); }
+        $session = session();
+        helper('log'); 
+
+        if($session->get('role') == 'faculty') { return redirect()->back()->with('error', 'Unauthorized'); }
 
         $folderModel = new FolderModel();
         
-        // CodeIgniter Model delete() does not automatically cascade to DB foreign keys usually,
-        // but if your DB table is set to ON DELETE CASCADE, contents will vanish.
-        // If not, we should manually check, but for now:
+        $folder = $folderModel->find($id);
+        $folderName = $folder['name'] ?? 'Unknown Folder';
+
         $folderModel->delete($id);
+
+        save_log('Delete Folder', "Deleted folder '$folderName' (ID: $id)");
 
         return redirect()->back()->with('success', 'Folder deleted.');
     }
 
+    // --- 4. Delete File ---
+    public function delete($id)
+    {
+        $session = session();
+        helper('log'); 
+
+        if($session->get('role') == 'faculty') {
+            return redirect()->back()->with('error', 'Unauthorized');
+        }
+
+        // [UPDATED] Use FileModel here too for consistency
+        $fileModel = new FileModel();
+        $file = $fileModel->find($id);
+        
+        if($file){
+            $fileModel->delete($id);
+            
+            save_log('Delete File', "Deleted file '{$file['filename']}'");
+
+            if(file_exists('uploads/' . $file['file_path'])){
+                unlink('uploads/' . $file['file_path']);
+            }
+            return redirect()->back()->with('success', 'File deleted.');
+        }
+    }
+
+    // --- Download ---
     public function download($id)
     {
-        $db = \Config\Database::connect();
-        $builder = $db->table('files');
-        $file = $builder->where('id', $id)->get()->getRow();
+        $fileModel = new FileModel();
+        $file = $fileModel->find($id);
 
         if($file) {
-            return $this->response->download('uploads/' . $file->file_path, null)->setFileName($file->filename);
+            return $this->response->download('uploads/' . $file['file_path'], null)->setFileName($file['filename']);
         }
         
         return redirect()->back()->with('error', 'File not found.');
     }
     
-    public function delete($id)
+    // --- Preview ---
+    public function preview($id)
     {
-        helper('log');
-        if(session()->get('role') == 'faculty') {
-            return redirect()->back()->with('error', 'Unauthorized');
-        }
-
-        $db = \Config\Database::connect();
-        $builder = $db->table('files');
-        
-        $file = $builder->where('id', $id)->get()->getRow();
-        
-        if($file){
-            $builder->where('id', $id)->delete();
-            save_log('Delete', 'Deleted a file (ID: '.$id.')');
-            if(file_exists('uploads/' . $file->file_path)){
-                unlink('uploads/' . $file->file_path);
-            }
-            return redirect()->back()->with('success', 'File deleted.');
-        }
-    }
-    
-     public function preview($id)
-    {
-        $db = \Config\Database::connect();
-        $file = $db->table('files')->where('id', $id)->get()->getRow();
+        $fileModel = new FileModel();
+        $file = $fileModel->find($id);
 
         if ($file) {
-            $filePath = FCPATH . 'uploads/' . $file->file_path;
+            $filePath = FCPATH . 'uploads/' . $file['file_path'];
             
             if (file_exists($filePath)) {
                 $mime = mime_content_type($filePath);
                 header('Content-Type: ' . $mime);
-                header('Content-Disposition: inline; filename="' . $file->filename . '"');
+                header('Content-Disposition: inline; filename="' . $file['filename'] . '"');
                 header('Content-Transfer-Encoding: binary');
                 header('Accept-Ranges: bytes');
                 readfile($filePath);

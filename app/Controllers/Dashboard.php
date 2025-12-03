@@ -1,7 +1,7 @@
 <?php namespace App\Controllers;
 
 use App\Models\UserModel;
-use App\Models\FolderModel; // 1. Load Folder Model
+use App\Models\FolderModel; 
 
 class Dashboard extends BaseController {
         
@@ -27,20 +27,24 @@ class Dashboard extends BaseController {
         // Start Query for Folders
         $folderBuilder = $folderModel->where('parent_id', $currentFolderId);
 
+        // [MODIFIED] Join with Departments to get the Code (e.g. SCITE)
+        $folderBuilder->select('folders.*, departments.code as dept_code');
+        $folderBuilder->join('departments', 'departments.id = folders.department_id', 'left');
+
         // [RESTRICTION 1] If Program Chair -> SHOW ONLY OWN DEPT FOLDERS
         if($role === 'program_chair' && $userDeptId) {
-            $folderBuilder->where('department_id', $userDeptId);
+            $folderBuilder->where('folders.department_id', $userDeptId);
         }
 
         // [RESTRICTION 2] If Admin selects a Dept from Dropdown -> FILTER FOLDERS
         $filterDept = $this->request->getGet('dept');
         if($role === 'admin' && !empty($filterDept)) {
-            $folderBuilder->where('department_id', $filterDept);
+            $folderBuilder->where('folders.department_id', $filterDept);
         }
 
         $data['folders'] = $folderBuilder->findAll();
 
-        // Breadcrumbs Logic (Unchanged)
+        // Breadcrumbs Logic
         $breadcrumbs = [];
         if ($currentFolderId) {
             $tempId = $currentFolderId;
@@ -56,7 +60,7 @@ class Dashboard extends BaseController {
         $data['current_folder_id'] = $currentFolderId;
 
 
-        // --- B. FILE LOGIC (Modified to match Folders) ---
+        // --- B. FILE LOGIC ---
         $fileBuilder = $db->table('files');
         $fileBuilder->select('files.*, departments.code as dept_code');
         $fileBuilder->join('departments', 'departments.id = files.department_id', 'left');
@@ -73,7 +77,7 @@ class Dashboard extends BaseController {
             if($userDeptId) {
                 $fileBuilder->where('files.department_id', $userDeptId);
             } else {
-                $fileBuilder->where('files.id', -1); // No dept assigned = see nothing
+                $fileBuilder->where('files.id', -1); 
             }
         }
 
@@ -98,17 +102,16 @@ class Dashboard extends BaseController {
         return view('admin_dashboard', $data);
     }
 
+    // --- DASHBOARD: FACULTY ---
     public function faculty() {
         $session = session();
         $db = \Config\Database::connect();
         $userModel = new \App\Models\UserModel();
-        $folderModel = new \App\Models\FolderModel(); // 1. Load Folder Model
+        $folderModel = new \App\Models\FolderModel(); 
 
-        // Get Current User & Department
         $user = $userModel->find($session->get('id'));
         $userDeptId = $user['department_id'] ?? null;
 
-        // If no department assigned, show empty view
         if(empty($userDeptId)) {
             return view('faculty_dashboard', ['files' => [], 'folders' => []]);
         }
@@ -117,12 +120,10 @@ class Dashboard extends BaseController {
         $currentFolderId = $this->request->getGet('folder_id');
         $currentFolderId = !empty($currentFolderId) ? $currentFolderId : null;
 
-        // Fetch Folders: Must match Parent ID AND User's Department
         $data['folders'] = $folderModel->where('parent_id', $currentFolderId)
                                        ->where('department_id', $userDeptId)
                                        ->findAll();
 
-        // Generate Breadcrumbs
         $breadcrumbs = [];
         if ($currentFolderId) {
             $tempId = $currentFolderId;
@@ -137,21 +138,16 @@ class Dashboard extends BaseController {
         $data['breadcrumbs'] = $breadcrumbs;
         $data['current_folder_id'] = $currentFolderId;
 
-
         // --- B. FILE LOGIC ---
         $builder = $db->table('files');
-        
-        // Filter by Department
         $builder->where('department_id', $userDeptId);
 
-        // Filter by Folder (Inside folder vs Root)
         if($currentFolderId){
             $builder->where('folder_id', $currentFolderId);
         } else {
             $builder->where('folder_id', NULL);
         }
 
-        // Search Logic
         $search = $this->request->getGet('q');
         if(!empty($search)){ $builder->like('filename', $search); }
 
@@ -160,7 +156,8 @@ class Dashboard extends BaseController {
         
         return view('faculty_dashboard', $data);
     }
-    // --- USER MANAGEMENT (Unchanged) ---
+
+    // --- USER MANAGEMENT ---
     public function users() {
         $session = session();
         if($session->get('role') !== 'admin') return redirect()->to('/admin/dashboard');

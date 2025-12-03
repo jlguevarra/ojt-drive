@@ -24,7 +24,7 @@
                         <i class='bx bx-search text-gray-400 text-xl group-focus-within:text-green-500 transition-colors'></i>
                     </span>
                     <input type="text" id="searchInput" onkeyup="filterFiles()" 
-                           placeholder="Search files in this folder..." 
+                           placeholder="Search shared files..." 
                            class="block w-full pl-10 pr-10 py-2 border-none rounded-lg bg-gray-100 focus:ring-2 focus:ring-green-500 focus:bg-white transition-colors text-sm">
                     <button id="clearBtn" onclick="clearSearch()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-red-500 hidden cursor-pointer transition-colors">
                         <i class='bx bx-x-circle text-xl'></i>
@@ -40,9 +40,9 @@
                 <div class="h-8 w-8 rounded-full bg-green-600 flex items-center justify-center text-white font-bold">
                     <?= substr(session()->get('username'), 0, 1) ?>
                 </div>
-                <a href="<?= base_url('/logout') ?>" class="text-gray-500 hover:text-red-600 transition-colors" title="Logout">
+                <button onclick="openLogoutModal()" class="text-gray-500 hover:text-red-600 transition-colors" title="Logout">
                     <i class='bx bx-log-out text-2xl'></i>
-                </a>
+                </button>
             </div>
         </header>
 
@@ -92,7 +92,8 @@
                 
                 <?php if(!empty($files)): foreach($files as $file): ?>
                 
-                <div class="file-item bg-white p-4 rounded-xl border border-gray-200 hover:shadow-md transition-shadow flex flex-col justify-between h-40 relative group">
+                <div class="file-item bg-white p-4 rounded-xl border border-gray-200 hover:shadow-md transition-shadow flex flex-col justify-between h-40 relative group"
+                     data-folder="<?= esc($file['folder'] ?? '201 File') ?>">
                     
                     <div class="flex justify-between items-start">
                         <div class="p-2 rounded-lg bg-green-100 text-green-600">
@@ -106,7 +107,7 @@
                         <div class="flex justify-between items-end mt-1">
                             <div class="flex flex-col">
                                 <p class="text-[10px] text-gray-400 uppercase font-semibold tracking-wider">
-                                    <?= !empty($file['folder_id']) ? 'Inside Folder' : 'Root' ?>
+                                    <?= !empty($file['folder_name']) ? esc($file['folder_name']) : 'Inside Folder' ?>
                                 </p>
                                 <p class="text-xs text-gray-500"><?= esc($file['file_size']) ?></p>
                             </div>
@@ -135,6 +136,20 @@
 
             </div>
         </main>
+    </div>
+
+    <div id="logoutModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-80 transform scale-100 transition-transform text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                <i class='bx bx-log-out text-2xl text-red-600'></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-800 mb-2">Confirm Logout</h3>
+            <p class="text-sm text-gray-500 mb-6">Are you sure you want to sign out of your account?</p>
+            <div class="flex justify-center space-x-3">
+                <button onclick="closeLogoutModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium transition-colors">Cancel</button>
+                <a href="<?= base_url('/logout') ?>" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium shadow-md shadow-red-500/30 transition-colors">Logout</a>
+            </div>
+        </div>
     </div>
 
     <div id="previewModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden z-50 flex items-center justify-center backdrop-blur-sm">
@@ -173,6 +188,7 @@
             const frame = document.getElementById('previewFrame');
             const noPreview = document.getElementById('noPreviewMsg');
             const loading = document.getElementById('previewLoading');
+
             const ext = filename.split('.').pop().toLowerCase();
             const viewable = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'txt'];
 
@@ -195,7 +211,11 @@
             document.getElementById('previewFrame').src = "";
         }
 
-        // --- FILTER LOGIC (Client-Side for current page) ---
+        // --- LOGOUT LOGIC ---
+        function openLogoutModal() { document.getElementById('logoutModal').classList.remove('hidden'); }
+        function closeLogoutModal() { document.getElementById('logoutModal').classList.add('hidden'); }
+
+        // --- FILTER LOGIC ---
         function filterFiles() {
             let input = document.getElementById('searchInput');
             let filter = input.value.toLowerCase();
