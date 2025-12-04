@@ -90,6 +90,7 @@
             </div>
             <h3 class="text-lg font-bold text-gray-800 mb-2">Confirm Logout</h3>
             <p class="text-sm text-gray-500 mb-6">Are you sure you want to sign out of your account?</p>
+           
             <div class="flex justify-center space-x-3">
                 <button onclick="closeLogoutModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium transition-colors">Cancel</button>
                 <a href="<?= base_url('/logout') ?>" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium shadow-md shadow-red-500/30 transition-colors">Logout</a>
