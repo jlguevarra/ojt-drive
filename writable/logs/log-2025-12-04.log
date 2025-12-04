@@ -1,0 +1,13 @@
+CRITICAL - 2025-12-04 05:40:06 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "archive_view.php"
+[Method: GET, Route: admin/archive]
+in SYSTEMPATH\Exceptions\FrameworkException.php on line 39.
+ 1 SYSTEMPATH\View\View.php(214): CodeIgniter\Exceptions\FrameworkException::forInvalidFile('archive_view.php')
+ 2 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('archive_view', [], true)
+ 3 APPPATH\Controllers\Archive.php(19): view('archive_view', [...])
+ 4 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Archive->index()
+ 5 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Archive))
+ 6 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+ 8 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+ 9 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+10 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\ojt-drive\\public\\index.php')

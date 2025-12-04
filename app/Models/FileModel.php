@@ -16,6 +16,7 @@ class FileModel extends Model
         'filename', 
         'file_path', 
         'file_size', 
-        'created_at'
+        'created_at',
+        'is_archived'
     ];
 }

@@ -94,7 +94,7 @@ class FileHandler extends BaseController
         }
     }
 
-    // --- 3. Delete Folder ---
+    // --- 3. ARCHIVE FOLDER (Modified) ---
     public function delete_folder($id)
     {
         $session = session();
@@ -103,41 +103,39 @@ class FileHandler extends BaseController
         if($session->get('role') == 'faculty') { return redirect()->back()->with('error', 'Unauthorized'); }
 
         $folderModel = new FolderModel();
-        
         $folder = $folderModel->find($id);
         $folderName = $folder['name'] ?? 'Unknown Folder';
 
-        $folderModel->delete($id);
+        // Soft Delete: Set is_archived to 1
+        $folderModel->update($id, ['is_archived' => 1]);
 
-        save_log('Delete Folder', "Deleted folder '$folderName' (ID: $id)");
+        save_log('Archive', "Archived folder '$folderName' (ID: $id)");
 
-        return redirect()->back()->with('success', 'Folder deleted.');
+        return redirect()->back()->with('success', 'Folder moved to archive.');
     }
 
-    // --- 4. Delete File ---
+    // --- 4. ARCHIVE FILE (Modified) ---
     public function delete($id)
     {
         $session = session();
-        helper('log'); 
+        helper('log');
 
         if($session->get('role') == 'faculty') {
             return redirect()->back()->with('error', 'Unauthorized');
         }
 
-        // [UPDATED] Use FileModel here too for consistency
         $fileModel = new FileModel();
         $file = $fileModel->find($id);
         
         if($file){
-            $fileModel->delete($id);
+            // Soft Delete: Set is_archived to 1
+            $fileModel->update($id, ['is_archived' => 1]);
             
-            save_log('Delete File', "Deleted file '{$file['filename']}'");
+            save_log('Archive', "Archived file '{$file['filename']}'");
 
-            if(file_exists('uploads/' . $file['file_path'])){
-                unlink('uploads/' . $file['file_path']);
-            }
-            return redirect()->back()->with('success', 'File deleted.');
+            return redirect()->back()->with('success', 'File moved to archive.');
         }
+        return redirect()->back()->with('error', 'File not found.');
     }
 
     // --- Download ---

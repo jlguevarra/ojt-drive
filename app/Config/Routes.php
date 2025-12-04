@@ -16,22 +16,23 @@ $routes->get('/logout', 'Auth::logout');
 $routes->get('/register', 'Auth::register');
 $routes->post('/auth/store', 'Auth::store');
 
-// 3. ADMIN ROUTES (Prefix: /admin/...)
+// 3. ADMIN ROUTES
 $routes->group('admin', ['filter' => 'authGuard'], function($routes){
     $routes->get('dashboard', 'Dashboard::admin');
     $routes->get('users', 'Dashboard::users');
     $routes->get('deleteUser/(:num)', 'Dashboard::deleteUser/$1');
     $routes->post('createUser', 'Dashboard::createUser');
     $routes->post('updateUser', 'Dashboard::updateUser');
-
-    // 8. ACTIVITY LOGS
     $routes->get('logs', 'Dashboard::logs');
-
-    // THIS shows the page at /admin/departments (Matches your sidebar)
     $routes->get('departments', 'Departments::index'); 
+
+    // [NEW] ARCHIVE ROUTES
+    $routes->get('archive', 'Archive::index');
+    $routes->get('archive/restore/(:segment)/(:num)', 'Archive::restore/$1/$2');
+    $routes->get('archive/delete/(:segment)/(:num)', 'Archive::delete_permanent/$1/$2');
 });
 
-// 4. DEPARTMENT ACTIONS (Prefix: /departments/...)
+// 4. DEPARTMENT ACTIONS
 $routes->group('departments', ['filter' => 'authGuard'], function($routes){
     $routes->post('create', 'Departments::create');
     $routes->post('update', 'Departments::update');
@@ -46,12 +47,11 @@ $routes->group('faculty', ['filter' => 'authGuard'], function($routes){
 // 6. FILE & FOLDER HANDLING
 $routes->post('/file/upload', 'FileHandler::upload', ['filter' => 'authGuard']);
 $routes->get('/file/download/(:num)', 'FileHandler::download/$1', ['filter' => 'authGuard']);
-$routes->get('/file/delete/(:num)', 'FileHandler::delete/$1', ['filter' => 'authGuard']);
+$routes->get('/file/delete/(:num)', 'FileHandler::delete/$1', ['filter' => 'authGuard']); // Now Archives
 $routes->get('/file/preview/(:num)', 'FileHandler::preview/$1', ['filter' => 'authGuard']);
 
-// [NEW] FOLDER ROUTES
 $routes->post('/folder/create', 'FileHandler::create_folder', ['filter' => 'authGuard']);
-$routes->get('/folder/delete/(:num)', 'FileHandler::delete_folder/$1', ['filter' => 'authGuard']);
+$routes->get('/folder/delete/(:num)', 'FileHandler::delete_folder/$1', ['filter' => 'authGuard']); // Now Archives
 
 
 // 7. SETTINGS

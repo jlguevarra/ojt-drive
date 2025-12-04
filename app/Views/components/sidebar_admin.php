@@ -1,6 +1,7 @@
 <?php $uri = service('uri')->getPath(); ?>
 
 <div class="w-64 bg-white border-r border-gray-200 flex flex-col hidden md:flex">
+    <!-- LOGO HEADER -->
     <div class="p-6 flex items-center space-x-2">
         <div class="bg-blue-600 p-2 rounded-lg">
             <i class='bx bxs-folder text-white text-xl'></i>
@@ -8,6 +9,7 @@
         <span class="text-xl font-bold text-gray-800">HCC Drive</span>
     </div>
 
+    <!-- NAVIGATION LINKS -->
     <nav class="flex-1 space-y-1 px-2 mt-2">
         <a href="<?= base_url('admin/dashboard') ?>" class="flex items-center space-x-3 w-full px-4 py-2 rounded-r-full font-medium transition-colors <?= (strpos($uri, 'dashboard') !== false) ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100' ?>">
             <i class='bx bx-home-alt text-xl'></i>
@@ -34,10 +36,16 @@
                 <span>Departments</span>
             </a>
 
+            <!-- [NEW] ARCHIVE LINK -->
+            <a href="<?= base_url('admin/archive') ?>" class="flex items-center space-x-3 w-full px-4 py-2 rounded-r-full font-medium transition-colors <?= (strpos($uri, 'archive') !== false) ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100' ?>">
+                <i class='bx bx-archive-in text-xl'></i>
+                <span>Archive</span>
+            </a>
+
         <?php endif; ?> 
         <a href="<?= base_url('settings') ?>" class="flex items-center space-x-3 w-full px-4 py-2 rounded-r-full font-medium transition-colors <?= (strpos($uri, 'settings') !== false) ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100' ?>">
             <i class='bx bx-cog text-xl'></i>
             <span>Settings</span>
         </a>
     </nav>
-</div>  
+</div>
