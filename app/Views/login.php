@@ -36,8 +36,6 @@
                     Official File Management & Collaboration Portal
                 </p>
             </div>
-            
-            
         </div>
 
         <!-- Right Side: Login Form -->
@@ -47,17 +45,19 @@
                 <p class="text-gray-500 text-sm mt-1">Please enter your credentials to access the drive.</p>
             </div>
 
-            <!-- Flash Messages -->
-            <?php if(session()->getFlashdata('msg')):?>
+            <!-- Flash Messages: Error (Used for Auth Errors & Archived Accounts) -->
+            <?php if(session()->getFlashdata('error')):?>
                 <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-r shadow-sm text-sm flex items-center">
                     <i class='bx bx-error-circle mr-2 text-lg'></i>
-                    <?= session()->getFlashdata('msg') ?>
+                    <?= session()->getFlashdata('error') ?>
                 </div>
             <?php endif;?>
-            <?php if(session()->getFlashdata('msg_success')):?>
+            
+            <!-- Flash Messages: Success -->
+            <?php if(session()->getFlashdata('success')):?>
                 <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-r shadow-sm text-sm flex items-center">
                     <i class='bx bx-check-circle mr-2 text-lg'></i>
-                    <?= session()->getFlashdata('msg_success') ?>
+                    <?= session()->getFlashdata('success') ?>
                 </div>
             <?php endif;?>
 
@@ -96,20 +96,5 @@
         </div>
     </div>
 
-    <!-- Animation Keyframes for the background blobs -->
-    <style>
-        @keyframes blob {
-            0% { transform: translate(0px, 0px) scale(1); }
-            33% { transform: translate(30px, -50px) scale(1.1); }
-            66% { transform: translate(-20px, 20px) scale(0.9); }
-            100% { transform: translate(0px, 0px) scale(1); }
-        }
-        .animate-blob {
-            animation: blob 7s infinite;
-        }
-        .animation-delay-2000 {
-            animation-delay: 2s;
-        }
-    </style>
 </body>
 </html>

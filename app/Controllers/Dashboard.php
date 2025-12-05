@@ -147,21 +147,27 @@ class Dashboard extends BaseController {
         return view('faculty_dashboard', $data);
     }
 
-    // ... (Users/Logs functions unchanged) ...
+    // --- USER MANAGEMENT ---
     public function users() {
         $session = session();
         if($session->get('role') !== 'admin') return redirect()->to('/admin/dashboard');
+
         $db = \Config\Database::connect();
         $myId = $session->get('id');
+        
         $users = $db->table('users')
                     ->select('users.*, departments.code as dept_code')
                     ->join('departments', 'departments.id = users.department_id', 'left')
                     ->where('users.id !=', $myId)
+                    ->where('users.is_archived', 0) // <--- FILTER: Hide archived users
                     ->orderBy('users.created_at', 'DESC')
                     ->get()->getResultArray();
+        
         $departments = $db->table('departments')->get()->getResultArray();
+
         $data['users'] = $users;
         $data['departments'] = $departments;
+
         return view('manage_users', $data);
     }
 
@@ -208,12 +214,22 @@ class Dashboard extends BaseController {
         return redirect()->back()->with('success', 'User updated.');
     }
 
+    // --- ARCHIVE USER (Modified) ---
     public function deleteUser($id) {
         if(session()->get('role') !== 'admin') return redirect()->back();
-        $db = \Config\Database::connect();
-        $db->table('files')->where('user_id', $id)->delete();
-        $db->table('users')->where('id', $id)->delete();
-        return redirect()->back()->with('success', 'User deleted.');
+        
+        helper('log');
+        $model = new UserModel();
+        $user = $model->find($id);
+        
+        if($user) {
+            // Soft Delete
+            $model->update($id, ['is_archived' => 1]);
+            save_log('Archive User', "Archived user: " . $user['username']);
+            return redirect()->back()->with('success', 'User moved to archive.');
+        }
+        
+        return redirect()->back()->with('error', 'User not found.');
     }
 
     public function logs() {

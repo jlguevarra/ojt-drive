@@ -1,91 +1,88 @@
 <?php namespace App\Controllers;
+
 use App\Models\UserModel;
 
-// This handles the Login Logic and Role Redirection
-class Auth extends BaseController {
-    
-    public function index() {
+class Auth extends BaseController
+{
+    public function index()
+    {
+        helper(['form']);
         return view('login');
     }
 
-    public function login() {
+    public function login()
+    {
         $session = session();
         $model = new UserModel();
         $email = $this->request->getVar('email');
         $password = $this->request->getVar('password');
-        helper(['form', 'log']); // <--- LOAD HELPER
-        $data = $model->where('email', $email)->first();
         
-        if($data){
-            $pass = $data['password'];
-            // verify_password would go here (using password_verify)
-            // For simplicity in this example, assuming plain match or verifying hash
-            if(password_verify($password, $pass)){ 
+        $user = $model->where('email', $email)->first();
+        
+        if($user){
+            // CHECK IF ARCHIVED
+            if($user['is_archived'] == 1) {
+                return redirect()->back()->with('error', 'Your account has been deactivated. Contact Admin.');
+            }
+
+            $pass = $user['password'];
+            if(password_verify($password, $pass)){
                 $ses_data = [
-                    'id'       => $data['id'],
-                    'username' => $data['username'],
-                    'email'    => $data['email'],
-                    'role'     => $data['role'],
-                    'logged_in'=> TRUE
+                    'id' => $user['id'],
+                    'username' => $user['username'],
+                    'email' => $user['email'],
+                    'role' => $user['role'],
+                    'logged_in' => TRUE
                 ];
                 $session->set($ses_data);
-                save_log('Login', 'User logged into the system.');
-
                 
-                // ROLE BASED REDIRECTION
-                // Admin and Chair go to same dashboard
-                if($data['role'] == 'admin' || $data['role'] == 'program_chair'){
-                    return redirect()->to('/admin/dashboard');
-                } else {
-                    return redirect()->to('/faculty/dashboard');
-                }
+                if($user['role'] == 'admin') return redirect()->to('/admin/dashboard');
+                if($user['role'] == 'program_chair') return redirect()->to('/admin/dashboard');
+                return redirect()->to('/faculty/dashboard');
             } else {
-                $session->setFlashdata('msg', 'Wrong Password');
-                return redirect()->to('/login');
+                // WRONG PASSWORD
+                return redirect()->back()->with('error', 'Invalid email or password.');
             }
         } else {
-            $session->setFlashdata('msg', 'Email not Found');
-            return redirect()->to('/login');
+            // USER NOT FOUND (Use same message as wrong password)
+            return redirect()->back()->with('error', 'Invalid email or password.');
         }
     }
-    
-    public function logout() {
-        session()->destroy();
+
+    public function logout()
+    {
+        $session = session();
+        $session->destroy();
         return redirect()->to('/login');
     }
 
-    public function register() {
+    public function register()
+    {
         helper(['form']);
         return view('register');
     }
 
-    public function store() {
+    public function store()
+    {
         helper(['form']);
-        
-        // 1. Remove 'role' from validation rules (since it's not in the form anymore)
         $rules = [
-            'username' => 'required|min_length[3]|max_length[50]',
-            'email'    => 'required|min_length[6]|max_length[50]|valid_email|is_unique[users.email]',
-            'password' => 'required|min_length[6]|max_length[200]'
+            'username'          => 'required|min_length[2]|max_length[50]',
+            'email'         => 'required|min_length[4]|max_length[100]|valid_email|is_unique[users.email]',
+            'password'      => 'required|min_length[4]|max_length[50]',
+            'confirmpassword'  => 'matches[password]'
         ];
 
         if($this->validate($rules)){
             $model = new UserModel();
-            
             $data = [
-                'username' => $this->request->getVar('username'),
+                'username'     => $this->request->getVar('username'),
                 'email'    => $this->request->getVar('email'),
                 'password' => password_hash($this->request->getVar('password'), PASSWORD_DEFAULT),
-                
-                // 2. HARDCODE THE ROLE HERE
-                // Everyone who registers via the public form is 'faculty' by default.
-                'role'     => 'faculty', 
+                'role'     => 'faculty' // Default role for registration
             ];
-            
             $model->save($data);
-            
-            return redirect()->to('/login')->with('msg_success', 'Account created! You can now login.');
-        } else {
+            return redirect()->to('/login');
+        }else{
             $data['validation'] = $this->validator;
             return view('register', $data);
         }

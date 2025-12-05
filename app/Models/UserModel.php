@@ -11,7 +11,9 @@ class UserModel extends Model {
         'email', 
         'password', 
         'role', 
-        'department_id'
+        'department_id',
+        'is_archived'
+
     ];
     
     // Helper to check if user is admin or chair
