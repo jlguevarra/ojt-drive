@@ -2,7 +2,7 @@
 
 use App\Models\UserModel;
 use App\Models\FolderModel; 
-use App\Models\FileModel; // Load this
+use App\Models\FileModel; 
 
 class Dashboard extends BaseController {
         
@@ -23,8 +23,9 @@ class Dashboard extends BaseController {
         $currentFolderId = $this->request->getGet('folder_id');
         $currentFolderId = !empty($currentFolderId) ? $currentFolderId : null;
 
+        // [FIXED] Ambiguous column error by adding 'folders.' prefix
         $folderBuilder = $folderModel->where('parent_id', $currentFolderId)
-                                     ->where('is_archived', 0); // <--- HIDE ARCHIVED
+                                     ->where('folders.is_archived', 0); 
 
         $folderBuilder->select('folders.*, departments.code as dept_code');
         $folderBuilder->join('departments', 'departments.id = folders.department_id', 'left');
@@ -59,7 +60,7 @@ class Dashboard extends BaseController {
         $fileBuilder = $db->table('files');
         $fileBuilder->select('files.*, departments.code as dept_code');
         $fileBuilder->join('departments', 'departments.id = files.department_id', 'left');
-        $fileBuilder->where('files.is_archived', 0); // <--- HIDE ARCHIVED
+        $fileBuilder->where('files.is_archived', 0); // Explicitly stated 'files.', so this was already correct
 
         if($currentFolderId){
             $fileBuilder->where('files.folder_id', $currentFolderId);
@@ -111,7 +112,7 @@ class Dashboard extends BaseController {
 
         $data['folders'] = $folderModel->where('parent_id', $currentFolderId)
                                        ->where('department_id', $userDeptId)
-                                       ->where('is_archived', 0) // <--- HIDE ARCHIVED
+                                       ->where('is_archived', 0)
                                        ->findAll();
 
         $breadcrumbs = [];
@@ -130,7 +131,7 @@ class Dashboard extends BaseController {
 
         $builder = $db->table('files');
         $builder->where('department_id', $userDeptId);
-        $builder->where('is_archived', 0); // <--- HIDE ARCHIVED
+        $builder->where('is_archived', 0);
 
         if($currentFolderId){
             $builder->where('folder_id', $currentFolderId);
@@ -147,84 +148,103 @@ class Dashboard extends BaseController {
         return view('faculty_dashboard', $data);
     }
 
-    // --- USER MANAGEMENT ---
     public function users() {
         $session = session();
         if($session->get('role') !== 'admin') return redirect()->to('/admin/dashboard');
-
         $db = \Config\Database::connect();
         $myId = $session->get('id');
-        
         $users = $db->table('users')
-                    ->select('users.*, departments.code as dept_code')
-                    ->join('departments', 'departments.id = users.department_id', 'left')
-                    ->where('users.id !=', $myId)
-                    ->where('users.is_archived', 0) // <--- FILTER: Hide archived users
-                    ->orderBy('users.created_at', 'DESC')
-                    ->get()->getResultArray();
-        
+            ->select('users.*, departments.code as dept_code')
+            ->join('departments', 'departments.id = users.department_id', 'left')
+            ->where('users.id !=', $myId)
+            ->where('users.is_archived', 0) // <--- MUST have 'users.' prefix
+            ->orderBy('users.created_at', 'DESC')
+            ->get()->getResultArray();
         $departments = $db->table('departments')->get()->getResultArray();
-
         $data['users'] = $users;
         $data['departments'] = $departments;
-
         return view('manage_users', $data);
     }
 
     public function createUser() {
         if(session()->get('role') !== 'admin') return redirect()->back();
+        
+        helper('log'); // Load Helper
         $model = new UserModel();
+        
         $rules = [
             'username' => 'required|min_length[3]',
             'email'    => 'required|valid_email|is_unique[users.email]',
             'password' => 'required|min_length[6]',
             'role'     => 'required'
         ];
+        
         $role = $this->request->getPost('role');
         if ($role === 'program_chair' || $role === 'faculty') {
             $rules['department_id'] = 'required'; 
         }
+
         if (!$this->validate($rules)) {
-            return redirect()->back()->with('error', implode(" ", $this->validator->getErrors()));
+            // [CHANGED] Return validation errors + input to keep modal open
+            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
+
+        $username = $this->request->getPost('username');
+
         $model->save([
-            'username'      => $this->request->getPost('username'),
+            'username'      => $username,
             'email'         => $this->request->getPost('email'),
             'password'      => password_hash($this->request->getPost('password'), PASSWORD_DEFAULT),
             'role'          => $role,
             'department_id' => $this->request->getPost('department_id') ?: null,
         ]);
+
+        // [LOGGING]
+        save_log('Create User', "Created user: $username ($role)");
+
         return redirect()->back()->with('success', 'User created successfully.');
     }
 
     public function updateUser() {
         if(session()->get('role') !== 'admin') return redirect()->back();
+        
+        helper('log'); // Load Helper
         $model = new UserModel();
         $id = $this->request->getPost('user_id');
+        $username = $this->request->getPost('username');
+
         $data = [
-            'username'      => $this->request->getPost('username'),
+            'username'      => $username,
             'role'          => $this->request->getPost('role'),
             'email'         => $this->request->getPost('email'),
             'department_id' => $this->request->getPost('department_id') ?: null,
         ];
+
         if($this->request->getPost('password')) {
             $data['password'] = password_hash($this->request->getPost('password'), PASSWORD_DEFAULT);
         }
+
         $model->update($id, $data);
+
+        // [LOGGING]
+        save_log('Update User', "Updated user: $username (ID: $id)");
+
         return redirect()->back()->with('success', 'User updated.');
     }
 
-    // --- ARCHIVE USER (Modified) ---
     public function deleteUser($id) {
         if(session()->get('role') !== 'admin') return redirect()->back();
         
         helper('log');
-        $model = new UserModel();
-        $user = $model->find($id);
+        $db = \Config\Database::connect();
+        
+        // 1. Get user info for logging
+        $user = $db->table('users')->where('id', $id)->get()->getRowArray();
         
         if($user) {
-            // Soft Delete
-            $model->update($id, ['is_archived' => 1]);
+            // 2. Force Update using Query Builder (Bypasses Model restrictions)
+            $db->table('users')->where('id', $id)->update(['is_archived' => 1]);
+            
             save_log('Archive User', "Archived user: " . $user['username']);
             return redirect()->back()->with('success', 'User moved to archive.');
         }
@@ -232,10 +252,20 @@ class Dashboard extends BaseController {
         return redirect()->back()->with('error', 'User not found.');
     }
 
+    // --- [UPDATED LOGS FUNCTION] ---
     public function logs() {
         if(session()->get('role') !== 'admin') return redirect()->to('/admin/dashboard');
-        $model = new \App\Models\LogModel();
-        $data['logs'] = $model->orderBy('created_at', 'DESC')->findAll();
+        
+        $db = \Config\Database::connect();
+        
+        // Join 'activity_logs' with 'users' to get the username and role
+        $builder = $db->table('activity_logs');
+        $builder->select('activity_logs.*, users.username, users.role');
+        $builder->join('users', 'users.id = activity_logs.user_id', 'left');
+        $builder->orderBy('activity_logs.created_at', 'DESC');
+        
+        $data['logs'] = $builder->get()->getResultArray();
+        
         return view('activity_logs', $data);
     }
 }

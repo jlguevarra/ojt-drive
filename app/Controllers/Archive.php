@@ -2,7 +2,8 @@
 
 use App\Models\FileModel;
 use App\Models\FolderModel;
-use App\Models\UserModel; // Load User Model
+use App\Models\UserModel;
+use App\Models\DepartmentModel; // [NEW] Import Department Model
 
 class Archive extends BaseController
 {
@@ -13,11 +14,13 @@ class Archive extends BaseController
         $fileModel = new FileModel();
         $folderModel = new FolderModel();
         $userModel = new UserModel();
+        $deptModel = new DepartmentModel(); // [NEW]
 
-        // Fetch archived items
         $data['files'] = $fileModel->where('is_archived', 1)->findAll();
         $data['folders'] = $folderModel->where('is_archived', 1)->findAll();
-        $data['users'] = $userModel->where('is_archived', 1)->findAll(); // Fetch Users
+        $data['users'] = $userModel->where('is_archived', 1)->findAll();
+        // [NEW] Fetch archived departments
+        $data['departments'] = $deptModel->where('is_archived', 1)->findAll(); 
 
         return view('archive_view', $data);
     }
@@ -39,6 +42,10 @@ class Archive extends BaseController
             $model = new UserModel();
             $model->update($id, ['is_archived' => 0]);
             save_log('Restore', "Restored user ID: $id");
+        } elseif ($type === 'department') { // [NEW] Handle Department Restore
+            $model = new DepartmentModel();
+            $model->update($id, ['is_archived' => 0]);
+            save_log('Restore', "Restored department ID: $id");
         }
 
         return redirect()->back()->with('success', ucfirst($type) . ' restored successfully.');
@@ -68,15 +75,20 @@ class Archive extends BaseController
         } elseif ($type === 'user') {
             $model = new UserModel();
             $user = $model->find($id);
-            
-            // Delete user's files first? Or keep them? 
-            // Usually safer to delete files owned by user to prevent orphan records
             $db->table('files')->where('user_id', $id)->delete();
-            
             $model->delete($id, true);
             save_log('Permanent Delete', "Deleted user: " . ($user['username'] ?? 'Unknown'));
+        } elseif ($type === 'department') { // [NEW] Handle Department Permanent Delete
+            $model = new DepartmentModel();
+            $dept = $model->find($id);
+            
+            // Optional: You might want to handle users attached to this department here
+            // e.g., Set their department_id to null or delete them
+            
+            $model->delete($id, true);
+            save_log('Permanent Delete', "Deleted department: " . ($dept['code'] ?? 'Unknown'));
         }
 
         return redirect()->back()->with('success', ucfirst($type) . ' permanently deleted.');
     }
-}
+}   

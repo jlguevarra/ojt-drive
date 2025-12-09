@@ -55,13 +55,38 @@
                         </div>
                         <div class="flex space-x-2">
                             <a href="<?= base_url('admin/archive/restore/user/'.$user['id']) ?>" class="text-green-500 hover:text-green-700" title="Restore"><i class='bx bx-revision text-xl'></i></a>
-                            <a href="<?= base_url('admin/archive/delete/user/'.$user['id']) ?>" onclick="return confirm('Permanently delete this user?')" class="text-red-400 hover:text-red-600" title="Delete Forever"><i class='bx bx-trash text-xl'></i></a>
+                            
                         </div>
                     </div>
                     <?php endforeach; ?>
                 </div>
             <?php else: ?>
                 <p class="text-gray-400 text-sm mb-8">No archived users.</p>
+            <?php endif; ?>
+            <!-- DEPARTMENTS -->    
+            <h2 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Archived Departments</h2>
+            <?php if(!empty($departments)): ?>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                    <?php foreach($departments as $dept): ?>
+                    <div class="bg-white p-4 rounded-xl border border-gray-200 flex justify-between items-center">
+                        <div class="flex items-center space-x-3">
+                            <div class="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold">
+                                <i class='bx bxs-building-house'></i>
+                            </div>
+                            <div>
+                                <span class="text-sm font-medium text-gray-600 block"><?= esc($dept['code']) ?></span>
+                                <span class="text-xs text-gray-400 block truncate w-32"><?= esc($dept['name']) ?></span>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <a href="<?= base_url('admin/archive/restore/department/'.$dept['id']) ?>" class="text-green-500 hover:text-green-700" title="Restore"><i class='bx bx-revision text-xl'></i></a>
+                        
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <p class="text-gray-400 text-sm mb-8">No archived departments.</p>
             <?php endif; ?>
 
             <!-- FOLDERS -->
@@ -76,7 +101,6 @@
                         </div>
                         <div class="flex space-x-2">
                             <a href="<?= base_url('admin/archive/restore/folder/'.$folder['id']) ?>" class="text-green-500 hover:text-green-700" title="Restore"><i class='bx bx-revision text-xl'></i></a>
-                            <a href="<?= base_url('admin/archive/delete/folder/'.$folder['id']) ?>" onclick="return confirm('Permanently delete this folder?')" class="text-red-400 hover:text-red-600" title="Delete Forever"><i class='bx bx-trash text-xl'></i></a>
                         </div>
                     </div>
                     <?php endforeach; ?>
@@ -97,7 +121,7 @@
                         </div>
                         <div class="flex space-x-2 shrink-0">
                             <a href="<?= base_url('admin/archive/restore/file/'.$file['id']) ?>" class="text-green-500 hover:text-green-700" title="Restore"><i class='bx bx-revision text-xl'></i></a>
-                            <a href="<?= base_url('admin/archive/delete/file/'.$file['id']) ?>" onclick="return confirm('Permanently delete this file?')" class="text-red-400 hover:text-red-600" title="Delete Forever"><i class='bx bx-trash text-xl'></i></a>
+                            
                         </div>
                     </div>
                     <?php endforeach; ?>

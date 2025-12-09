@@ -18,18 +18,22 @@
     <!-- MAIN CONTENT -->
     <div class="flex-1 flex flex-col overflow-hidden">
         
-        <!-- HEADER -->
+        <!-- HEADER (Updated to match Settings/Archive) -->
         <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 shadow-sm z-10">
-            <div class="flex items-center space-x-2 text-gray-500 text-sm">
-                <span>Admin Panel</span>
-                <i class='bx bx-chevron-right'></i>
-                <span class="font-semibold text-gray-800">System Logs</span>
-            </div>
-            <div class="flex items-center space-x-4 ml-4">
-                <span class="text-sm font-medium text-gray-800"><?= session()->get('username') ?> (Admin)</span>
-                <a href="<?= base_url('/logout') ?>" class="text-gray-500 hover:text-red-600 transition-colors" title="Logout">
+            <h1 class="text-xl font-bold text-gray-800">System Logs</h1>
+            
+            <div class="flex items-center space-x-4">
+                <div class="text-right hidden sm:block">
+                    <p class="text-sm font-medium text-gray-800"><?= session()->get('username') ?></p>
+                    <p class="text-xs text-gray-500 uppercase"><?= session()->get('role') ?></p>
+                </div>
+                <div class="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                    <?= substr(session()->get('username'), 0, 1) ?>
+                </div>
+                <!-- Logout Button Trigger -->
+                <button onclick="openLogoutModal()" class="text-gray-500 hover:text-red-600 transition-colors" title="Logout">
                     <i class='bx bx-log-out text-2xl'></i>
-                </a>
+                </button>
             </div>
         </header>
 
@@ -70,11 +74,10 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-xs">
-                                        <?= substr($log['user_name'], 0, 1) ?>
+                                        <?= substr($log['username'], 0, 1) ?>
                                     </div>
                                     <div class="ml-3">
-                                        <div class="text-sm font-medium text-gray-900"><?= esc($log['user_name']) ?></div>
-                                        <div class="text-xs text-gray-400 capitalize"><?= str_replace('_', ' ', $log['role']) ?></div>
+                                        <div class="text-sm font-medium text-gray-900"><?= esc($log['username']) ?></div>
                                     </div>
                                 </div>
                             </td>
@@ -85,24 +88,11 @@
                                     $color = 'gray';
                                     $icon = 'bx-radio-circle';
                                     
-                                    switch($log['action']) {
-                                        case 'Login': 
-                                            $color = 'green'; 
-                                            $icon = 'bx-log-in-circle';
-                                            break;
-                                        case 'Upload': 
-                                            $color = 'blue'; 
-                                            $icon = 'bx-cloud-upload';
-                                            break;
-                                        case 'Delete': 
-                                            $color = 'red'; 
-                                            $icon = 'bx-trash';
-                                            break;
-                                        case 'Create User':
-                                            $color = 'purple';
-                                            $icon = 'bx-user-plus';
-                                            break;
-                                    }
+                                    if(strpos($log['action'], 'Login') !== false) { $color = 'green'; $icon = 'bx-log-in-circle'; }
+                                    elseif(strpos($log['action'], 'Upload') !== false) { $color = 'blue'; $icon = 'bx-cloud-upload'; }
+                                    elseif(strpos($log['action'], 'Delete') !== false || strpos($log['action'], 'Archive') !== false) { $color = 'red'; $icon = 'bx-trash'; }
+                                    elseif(strpos($log['action'], 'Create') !== false) { $color = 'purple'; $icon = 'bx-plus-circle'; }
+                                    elseif(strpos($log['action'], 'Restore') !== false) { $color = 'teal'; $icon = 'bx-revision'; }
                                 ?>
                                 <span class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-<?= $color ?>-50 text-<?= $color ?>-700 border border-<?= $color ?>-200">
                                     <i class='bx <?= $icon ?> mr-1'></i>
@@ -130,5 +120,25 @@
         </main>
     </div>
 
+    <!-- LOGOUT MODAL -->
+    <div id="logoutModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-80 transform scale-100 transition-transform text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                <i class='bx bx-log-out text-2xl text-red-600'></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-800 mb-2">Confirm Logout</h3>
+            <p class="text-sm text-gray-500 mb-6">Are you sure you want to sign out of your account?</p>
+            <div class="flex justify-center space-x-3">
+                <button onclick="closeLogoutModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium transition-colors">Cancel</button>
+                <a href="<?= base_url('/logout') ?>" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium shadow-md shadow-red-500/30 transition-colors">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // LOGOUT LOGIC
+        function openLogoutModal() { document.getElementById('logoutModal').classList.remove('hidden'); }
+        function closeLogoutModal() { document.getElementById('logoutModal').classList.add('hidden'); }
+    </script>
 </body>
-</html>
+</html> 

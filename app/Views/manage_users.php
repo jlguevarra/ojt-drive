@@ -14,14 +14,19 @@
 
     <div class="flex-1 flex flex-col overflow-hidden">
         <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 shadow-sm z-10">
-            <div class="flex items-center space-x-2 text-gray-500 text-sm">
-                <span>Admin Panel</span>
-                <i class='bx bx-chevron-right'></i>
-                <span class="font-semibold text-gray-800">User Management</span>
-            </div>
+            <div class="text-xl font-bold text-gray-800">Manage Users</div>
+
             <div class="flex items-center space-x-4 ml-4">
-                <span class="text-sm font-medium text-gray-800"><?= session()->get('username') ?> (Admin)</span>
-                <a href="<?= base_url('/logout') ?>" class="text-gray-500 hover:text-red-600 transition-colors"><i class='bx bx-log-out text-2xl'></i></a>
+                <div class="text-right hidden sm:block">
+                    <p class="text-sm font-medium text-gray-800"><?= session()->get('username') ?></p>
+                    <p class="text-xs text-gray-500 uppercase"><?= session()->get('role') ?></p>
+                </div>
+                <div class="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                    <?= substr(session()->get('username'), 0, 1) ?>
+                </div>
+                <a href="<?= base_url('/logout') ?>" class="text-gray-500 hover:text-red-600 transition-colors">
+                    <i class='bx bx-log-out text-2xl'></i>
+                </a>
             </div>
         </header>
 
@@ -94,7 +99,6 @@
         </main>
     </div>
 
-    <!-- CREATE USER MODAL -->
     <div id="createModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden z-50 flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
             <div class="flex justify-between items-center mb-6">
@@ -115,7 +119,6 @@
                     <input type="password" name="password" required class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
                 
-                <!-- ROLE SELECT with OnChange event -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Role</label>
                     <select name="role" id="create_role" onchange="toggleDepartment('create_role', 'create_dept_container')" class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none">
@@ -125,10 +128,9 @@
                     </select>
                 </div>
 
-                <!-- DEPARTMENT DROPDOWN (Hidden for Admin) -->
                 <div id="create_dept_container">
                     <label class="block text-sm font-bold text-gray-700 mb-1">Department <span class="text-red-500">*</span></label>
-                    <select name="department_id" id="create_dept_select" class="w-full border rounded px-3 py-2 bg-gray-50">
+                    <select required name="department_id" id="create_dept_select" class="w-full border rounded px-3 py-2 bg-gray-50">
                         <option value="">-- Select Department --</option>
                         <?php if(!empty($departments)): foreach($departments as $dept): ?>
                             <option value="<?= $dept['id'] ?>"><?= $dept['code'] ?> - <?= $dept['name'] ?></option>
@@ -142,7 +144,6 @@
         </div>
     </div>
 
-    <!-- EDIT USER MODAL -->
     <div id="editModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden z-50 flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
             <div class="flex justify-between items-center mb-6">
@@ -164,7 +165,6 @@
                     <input type="password" name="password" placeholder="Leave blank to keep current" class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
                 
-                <!-- ROLE SELECT with OnChange event -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Role</label>
                     <select name="role" id="edit_role" onchange="toggleDepartment('edit_role', 'edit_dept_container')" class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none">
@@ -174,7 +174,6 @@
                     </select>
                 </div>
 
-                <!-- DEPARTMENT DROPDOWN (Hidden for Admin) -->
                 <div id="edit_dept_container">
                     <label class="block text-sm font-bold text-gray-700 mb-1">Department <span class="text-red-500">*</span></label>
                     <select name="department_id" id="edit_department_id" class="w-full border rounded px-3 py-2 bg-gray-50">
@@ -225,4 +224,4 @@
         }
     </script>
 </body>
-</html> 
+</html>

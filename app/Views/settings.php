@@ -17,13 +17,9 @@
         
         // Colors
         $themeColor = $isAdmin ? 'blue' : 'green';
-        $sidebarIcon = $isAdmin ? 'bxs-folder' : 'bxs-folder'; // Same icon
-        $navBg = $isAdmin ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700';
-        $dashboardLink = $isAdmin ? base_url('admin/dashboard') : base_url('faculty/dashboard');
     ?>
 
     <!-- SIDEBAR -->
-    <!-- DYNAMIC SIDEBAR LOADING -->
     <?php 
         if(session()->get('role') == 'faculty') {
             echo view('components/sidebar_faculty');
@@ -32,14 +28,14 @@
         }
     ?>
 
-
     <!-- MAIN CONTENT -->
     <div class="flex-1 flex flex-col overflow-hidden">
         
         <!-- HEADER -->
         <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 shadow-sm z-10">
-            <div class="font-semibold text-gray-700">Account Settings</div>
-            <div class="flex items-center space-x-4 ml-4">
+            <h1 class="text-xl font-bold text-gray-800">Account Settings</h1>
+            
+            <div class="flex items-center space-x-4">
                 <div class="text-right hidden sm:block">
                     <p class="text-sm font-medium text-gray-800"><?= session()->get('username') ?></p>
                     <p class="text-xs text-gray-500 uppercase"><?= $role ?></p>
@@ -47,9 +43,10 @@
                 <div class="h-8 w-8 rounded-full bg-<?= $themeColor ?>-600 flex items-center justify-center text-white font-bold">
                     <?= substr(session()->get('username'), 0, 1) ?>
                 </div>
-                <a href="<?= base_url('/logout') ?>" class="text-gray-500 hover:text-red-600 transition-colors">
+                <!-- [NEW] Logout Button Trigger -->
+                <button onclick="openLogoutModal()" class="text-gray-500 hover:text-red-600 transition-colors" title="Logout">
                     <i class='bx bx-log-out text-2xl'></i>
-                </a>
+                </button>
             </div>
         </header>
 
@@ -121,6 +118,27 @@
             </div>
         </main>
     </div>
+
+    <!-- [NEW] LOGOUT MODAL -->
+    <div id="logoutModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-80 transform scale-100 transition-transform text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                <i class='bx bx-log-out text-2xl text-red-600'></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-800 mb-2">Confirm Logout</h3>
+            <p class="text-sm text-gray-500 mb-6">Are you sure you want to sign out of your account?</p>
+            <div class="flex justify-center space-x-3">
+                <button onclick="closeLogoutModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium transition-colors">Cancel</button>
+                <a href="<?= base_url('/logout') ?>" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium shadow-md shadow-red-500/30 transition-colors">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // [NEW] LOGOUT LOGIC
+        function openLogoutModal() { document.getElementById('logoutModal').classList.remove('hidden'); }
+        function closeLogoutModal() { document.getElementById('logoutModal').classList.add('hidden'); }
+    </script>
 
 </body>
 </html>

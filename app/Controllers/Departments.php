@@ -14,7 +14,8 @@ class Departments extends BaseController {
         if(!$this->checkAccess()) return redirect()->to('admin/dashboard');
 
         $model = new DepartmentModel();
-        $data['departments'] = $model->orderBy('id', 'DESC')->findAll();
+        // [CHANGED] Only fetch non-archived departments
+        $data['departments'] = $model->where('is_archived', 0)->orderBy('id', 'DESC')->findAll();
         
         return view('manage_departments', $data);
     }
@@ -22,11 +23,17 @@ class Departments extends BaseController {
     public function create() {
         if(!$this->checkAccess()) return redirect()->back();
         
+        helper('log'); // Load Helper
         $model = new DepartmentModel();
+        $code = $this->request->getPost('code');
+
         $model->save([
-            'code' => $this->request->getPost('code'),
+            'code' => $code,
             'name' => $this->request->getPost('name')
         ]);
+
+        // [LOGGING]
+        save_log('Create Department', "Created department: $code");
 
         return redirect()->back()->with('success', 'Department added successfully.');
     }
@@ -34,23 +41,37 @@ class Departments extends BaseController {
     public function update() {
         if(!$this->checkAccess()) return redirect()->back();
 
+        helper('log'); // Load Helper
         $model = new DepartmentModel();
         $id = $this->request->getPost('id');
+        $code = $this->request->getPost('code');
         
         $model->update($id, [
-            'code' => $this->request->getPost('code'),
+            'code' => $code,
             'name' => $this->request->getPost('name')
         ]);
+
+        // [LOGGING]
+        save_log('Update Department', "Updated department ID: $id ($code)");
 
         return redirect()->back()->with('success', 'Department updated successfully.');
     }
 
+// [CHANGED] Now Soft Deletes and Logs
     public function delete($id) {
         if(!$this->checkAccess()) return redirect()->back();
 
+        helper('log'); // Load Helper
         $model = new DepartmentModel();
-        $model->delete($id);
+        $dept = $model->find($id); // Fetch info for the log
 
-        return redirect()->back()->with('success', 'Department deleted.');
+        // Soft Delete (Archive)
+        $model->update($id, ['is_archived' => 1]);
+
+        // [LOGGING]
+        $deptName = $dept['code'] ?? 'Unknown';
+        save_log('Archive Department', "Archived department: $deptName");
+
+        return redirect()->back()->with('success', 'Department archived.');
     }
 }
