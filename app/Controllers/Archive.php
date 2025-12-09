@@ -11,20 +11,28 @@ class Archive extends BaseController
     {
         if(session()->get('role') !== 'admin') return redirect()->back();
         
-        $fileModel = new FileModel();
+        $fileModel   = new FileModel();
         $folderModel = new FolderModel();
-        $userModel = new UserModel();
-        $deptModel = new DepartmentModel(); // [NEW]
+        $userModel   = new UserModel();
+        $deptModel   = new DepartmentModel();
 
-        $data['files'] = $fileModel->where('is_archived', 1)->findAll();
-        $data['folders'] = $folderModel->where('is_archived', 1)->findAll();
-        $data['users'] = $userModel->where('is_archived', 1)->findAll();
-        // [NEW] Fetch archived departments
-        $data['departments'] = $deptModel->where('is_archived', 1)->findAll(); 
+        // Fetch Paginated Items (6 items per page for a grid layout)
+        // Note: The second parameter 'group_name' is crucial for multiple pagers on one page.
+        
+        $data['users'] = $userModel->where('is_archived', 1)->paginate(6, 'users');
+        $data['pager_users'] = $userModel->pager;
+
+        $data['departments'] = $deptModel->where('is_archived', 1)->paginate(6, 'departments');
+        $data['pager_departments'] = $deptModel->pager;
+
+        $data['folders'] = $folderModel->where('is_archived', 1)->paginate(6, 'folders');
+        $data['pager_folders'] = $folderModel->pager;
+
+        $data['files'] = $fileModel->where('is_archived', 1)->paginate(6, 'files');
+        $data['pager_files'] = $fileModel->pager;
 
         return view('archive_view', $data);
     }
-
     public function restore($type, $id)
     {
         if(session()->get('role') !== 'admin') return redirect()->back();

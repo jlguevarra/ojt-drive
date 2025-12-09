@@ -264,8 +264,14 @@ class Dashboard extends BaseController {
 
     public function logs() {
         if(session()->get('role') !== 'admin') return redirect()->to('/admin/dashboard');
+        
         $model = new \App\Models\LogModel();
-        $data['logs'] = $model->orderBy('created_at', 'DESC')->findAll();
+        
+        // [CHANGED] Use paginate() instead of findAll()
+        // showing 15 logs per page
+        $data['logs'] = $model->orderBy('created_at', 'DESC')->paginate(5); 
+        $data['pager'] = $model->pager;
+        
         return view('activity_logs', $data);
     }
 }

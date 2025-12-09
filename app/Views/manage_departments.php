@@ -6,7 +6,29 @@
     <title>Manage Departments - HCC Drive</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'); body { font-family: 'Inter', sans-serif; }</style>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'); 
+        body { font-family: 'Inter', sans-serif; }
+
+        /* [NEW] Pagination CSS */
+        .pagination { display: flex; justify-content: center; gap: 0.5rem; margin-top: 1.5rem; }
+        .pagination li { display: inline-block; }
+        .pagination li a, .pagination li span {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+            background-color: white;
+            color: #374151;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        .pagination li a:hover { background-color: #f3f4f6; color: #2563eb; }
+        .pagination li.active a, .pagination li.active span {
+            background-color: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+    </style>
 </head>
 <body class="bg-gray-50 h-screen flex overflow-hidden">
 
@@ -14,7 +36,6 @@
 
     <div class="flex-1 flex flex-col overflow-hidden">
         
-        <!-- HEADER (Updated to match Settings Page style) -->
         <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 shadow-sm z-10">
             <h1 class="text-xl font-bold text-gray-800">Departments</h1>
             
@@ -26,7 +47,6 @@
                 <div class="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
                     <?= substr(session()->get('username'), 0, 1) ?>
                 </div>
-                <!-- Logout Button Trigger -->
                 <button onclick="openLogoutModal()" class="text-gray-500 hover:text-red-600 transition-colors" title="Logout">
                     <i class='bx bx-log-out text-2xl'></i>
                 </button>
@@ -76,10 +96,14 @@
                     </tbody>
                 </table>
             </div>
+
+            <div class="mt-6 flex justify-center">
+                <?= $pager->links() ?>
+            </div>
+
         </main>
     </div>
 
-    <!-- CREATE MODAL -->
     <div id="createModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden z-50 flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
             <div class="flex justify-between items-center mb-6">
@@ -100,7 +124,6 @@
         </div>
     </div>
 
-    <!-- EDIT MODAL -->
     <div id="editModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden z-50 flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
             <div class="flex justify-between items-center mb-6">
@@ -122,7 +145,6 @@
         </div>
     </div>
 
-    <!-- [NEW] LOGOUT MODAL -->
     <div id="logoutModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white p-6 rounded-xl shadow-2xl w-80 transform scale-100 transition-transform text-center">
             <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
@@ -145,7 +167,6 @@
             document.getElementById('editModal').classList.remove('hidden');
         }
 
-        // [NEW] LOGOUT LOGIC
         function openLogoutModal() { document.getElementById('logoutModal').classList.remove('hidden'); }
         function closeLogoutModal() { document.getElementById('logoutModal').classList.add('hidden'); }
     </script>

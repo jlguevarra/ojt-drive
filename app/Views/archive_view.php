@@ -9,6 +9,32 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
+
+        /* Pagination CSS */
+        .pagination { display: flex; justify-content: center; gap: 0.5rem; margin-top: 1.5rem; }
+        .pagination li { display: inline-block; }
+        .pagination li a, .pagination li span {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+            background-color: white;
+            color: #374151;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        .pagination li a:hover { background-color: #f3f4f6; color: #2563eb; }
+        .pagination li.active a, .pagination li.active span {
+            background-color: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
+        /* Tab Active State */
+        .tab-btn.active {
+            border-bottom: 2px solid #2563eb;
+            color: #2563eb;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body class="bg-gray-50 h-screen flex overflow-hidden">
@@ -26,7 +52,6 @@
                 <div class="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
                     <?= substr(session()->get('username'), 0, 1) ?>
                 </div>
-                <!-- [NEW] Logout Button -->
                 <button onclick="openLogoutModal()" class="text-gray-500 hover:text-red-600 transition-colors" title="Logout">
                     <i class='bx bx-log-out text-2xl'></i>
                 </button>
@@ -35,104 +60,135 @@
 
         <main class="flex-1 overflow-y-auto p-6">
             <?php if(session()->getFlashdata('success')):?>
-                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4"><?= session()->getFlashdata('success') ?></div>
+                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-6"><?= session()->getFlashdata('success') ?></div>
             <?php endif;?>
 
-            <!-- USERS -->
-            <h2 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Archived Users</h2>
-            <?php if(!empty($users)): ?>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                    <?php foreach($users as $user): ?>
-                    <div class="bg-white p-4 rounded-xl border border-gray-200 flex justify-between items-center">
-                        <div class="flex items-center space-x-3">
-                            <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold">
-                                <?= substr($user['username'], 0, 1) ?>
-                            </div>
-                            <div>
-                                <span class="text-sm font-medium text-gray-600 block"><?= esc($user['username']) ?></span>
-                                <span class="text-xs text-gray-400 block"><?= esc($user['role']) ?></span>
-                            </div>
-                        </div>
-                        <div class="flex space-x-2">
-                            <a href="<?= base_url('admin/archive/restore/user/'.$user['id']) ?>" class="text-green-500 hover:text-green-700" title="Restore"><i class='bx bx-revision text-xl'></i></a>
-                            
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php else: ?>
-                <p class="text-gray-400 text-sm mb-8">No archived users.</p>
-            <?php endif; ?>
-            <!-- DEPARTMENTS -->    
-            <h2 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Archived Departments</h2>
-            <?php if(!empty($departments)): ?>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                    <?php foreach($departments as $dept): ?>
-                    <div class="bg-white p-4 rounded-xl border border-gray-200 flex justify-between items-center">
-                        <div class="flex items-center space-x-3">
-                            <div class="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold">
-                                <i class='bx bxs-building-house'></i>
-                            </div>
-                            <div>
-                                <span class="text-sm font-medium text-gray-600 block"><?= esc($dept['code']) ?></span>
-                                <span class="text-xs text-gray-400 block truncate w-32"><?= esc($dept['name']) ?></span>
-                            </div>
-                        </div>
-                        <div class="flex space-x-2">
-                            <a href="<?= base_url('admin/archive/restore/department/'.$dept['id']) ?>" class="text-green-500 hover:text-green-700" title="Restore"><i class='bx bx-revision text-xl'></i></a>
-                        
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php else: ?>
-                <p class="text-gray-400 text-sm mb-8">No archived departments.</p>
-            <?php endif; ?>
+            <div class="border-b border-gray-200 mb-6">
+                <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                    <button onclick="switchTab('users')" id="btn-users" class="tab-btn active whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        <i class='bx bx-user mr-2'></i> Archived Users
+                    </button>
+                    <button onclick="switchTab('depts')" id="btn-depts" class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        <i class='bx bxs-building-house mr-2'></i> Departments
+                    </button>
+                    <button onclick="switchTab('folders')" id="btn-folders" class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        <i class='bx bxs-folder mr-2'></i> Folders
+                    </button>
+                    <button onclick="switchTab('files')" id="btn-files" class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                        <i class='bx bxs-file mr-2'></i> Files
+                    </button>
+                </nav>
+            </div>
 
-            <!-- FOLDERS -->
-            <h2 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Archived Folders</h2>
-            <?php if(!empty($folders)): ?>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                    <?php foreach($folders as $folder): ?>
-                    <div class="bg-white p-4 rounded-xl border border-gray-200 flex justify-between items-center">
-                        <div class="flex items-center space-x-3">
-                            <i class='bx bxs-folder text-gray-400 text-3xl'></i>
-                            <span class="text-sm font-medium text-gray-600"><?= esc($folder['name']) ?></span>
+            <div id="tab-users" class="tab-content">
+                <?php if(!empty($users)): ?>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                        <?php foreach($users as $user): ?>
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 flex justify-between items-center shadow-sm">
+                            <div class="flex items-center space-x-3">
+                                <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold">
+                                    <?= substr($user['username'], 0, 1) ?>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-gray-600 block"><?= esc($user['username']) ?></span>
+                                    <span class="text-xs text-gray-400 block"><?= esc($user['role']) ?></span>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <a href="<?= base_url('admin/archive/restore/user/'.$user['id']) ?>" class="text-green-500 hover:text-green-700 bg-green-50 p-2 rounded-full" title="Restore"><i class='bx bx-revision'></i></a>
+                                <a href="<?= base_url('admin/archive/delete/user/'.$user['id']) ?>" onclick="return confirm('Permanently delete this user?')" class="text-red-400 hover:text-red-600 bg-red-50 p-2 rounded-full" title="Delete Forever"><i class='bx bx-trash'></i></a>
+                            </div>
                         </div>
-                        <div class="flex space-x-2">
-                            <a href="<?= base_url('admin/archive/restore/folder/'.$folder['id']) ?>" class="text-green-500 hover:text-green-700" title="Restore"><i class='bx bx-revision text-xl'></i></a>
-                        </div>
+                        <?php endforeach; ?>
                     </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php else: ?>
-                <p class="text-gray-400 text-sm mb-8">No archived folders.</p>
-            <?php endif; ?>
+                    <div class="flex justify-center"><?= $pager_users->links('users') ?></div>
+                <?php else: ?>
+                    <div class="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
+                        <p class="text-gray-400 text-sm">No archived users found.</p>
+                    </div>
+                <?php endif; ?>
+            </div>
 
-            <!-- FILES -->
-            <h2 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Archived Files</h2>
-            <?php if(!empty($files)): ?>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <?php foreach($files as $file): ?>
-                    <div class="bg-white p-4 rounded-xl border border-gray-200 flex justify-between items-center">
-                        <div class="flex items-center space-x-3 overflow-hidden">
-                            <i class='bx bxs-file text-gray-400 text-2xl'></i>
-                            <span class="text-sm font-medium text-gray-600 truncate"><?= esc($file['filename']) ?></span>
+            <div id="tab-depts" class="tab-content hidden">
+                <?php if(!empty($departments)): ?>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                        <?php foreach($departments as $dept): ?>
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 flex justify-between items-center shadow-sm">
+                            <div class="flex items-center space-x-3">
+                                <div class="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold">
+                                    <i class='bx bxs-building-house'></i>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-gray-600 block"><?= esc($dept['code']) ?></span>
+                                    <span class="text-xs text-gray-400 block truncate w-32"><?= esc($dept['name']) ?></span>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <a href="<?= base_url('admin/archive/restore/department/'.$dept['id']) ?>" class="text-green-500 hover:text-green-700 bg-green-50 p-2 rounded-full" title="Restore"><i class='bx bx-revision'></i></a>
+                                <a href="<?= base_url('admin/archive/delete/department/'.$dept['id']) ?>" onclick="return confirm('Permanently delete this department?')" class="text-red-400 hover:text-red-600 bg-red-50 p-2 rounded-full" title="Delete Forever"><i class='bx bx-trash'></i></a>
+                            </div>
                         </div>
-                        <div class="flex space-x-2 shrink-0">
-                            <a href="<?= base_url('admin/archive/restore/file/'.$file['id']) ?>" class="text-green-500 hover:text-green-700" title="Restore"><i class='bx bx-revision text-xl'></i></a>
-                            
-                        </div>
+                        <?php endforeach; ?>
                     </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php else: ?>
-                <p class="text-gray-400 text-sm">No archived files.</p>
-            <?php endif; ?>
+                    <div class="flex justify-center"><?= $pager_departments->links('departments') ?></div>
+                <?php else: ?>
+                    <div class="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
+                        <p class="text-gray-400 text-sm">No archived departments.</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <div id="tab-folders" class="tab-content hidden">
+                <?php if(!empty($folders)): ?>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                        <?php foreach($folders as $folder): ?>
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 flex justify-between items-center shadow-sm">
+                            <div class="flex items-center space-x-3">
+                                <i class='bx bxs-folder text-yellow-400 text-3xl'></i>
+                                <span class="text-sm font-medium text-gray-600"><?= esc($folder['name']) ?></span>
+                            </div>
+                            <div class="flex space-x-2">
+                                <a href="<?= base_url('admin/archive/restore/folder/'.$folder['id']) ?>" class="text-green-500 hover:text-green-700 bg-green-50 p-2 rounded-full" title="Restore"><i class='bx bx-revision'></i></a>
+                                <a href="<?= base_url('admin/archive/delete/folder/'.$folder['id']) ?>" onclick="return confirm('Permanently delete this folder?')" class="text-red-400 hover:text-red-600 bg-red-50 p-2 rounded-full" title="Delete Forever"><i class='bx bx-trash'></i></a>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <div class="flex justify-center"><?= $pager_folders->links('folders') ?></div>
+                <?php else: ?>
+                    <div class="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
+                        <p class="text-gray-400 text-sm">No archived folders.</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <div id="tab-files" class="tab-content hidden">
+                <?php if(!empty($files)): ?>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <?php foreach($files as $file): ?>
+                        <div class="bg-white p-4 rounded-xl border border-gray-200 flex justify-between items-center shadow-sm">
+                            <div class="flex items-center space-x-3 overflow-hidden">
+                                <i class='bx bxs-file text-blue-400 text-2xl'></i>
+                                <span class="text-sm font-medium text-gray-600 truncate"><?= esc($file['filename']) ?></span>
+                            </div>
+                            <div class="flex space-x-2 shrink-0">
+                                <a href="<?= base_url('admin/archive/restore/file/'.$file['id']) ?>" class="text-green-500 hover:text-green-700 bg-green-50 p-2 rounded-full" title="Restore"><i class='bx bx-revision'></i></a>
+                                <a href="<?= base_url('admin/archive/delete/file/'.$file['id']) ?>" onclick="return confirm('Permanently delete this file?')" class="text-red-400 hover:text-red-600 bg-red-50 p-2 rounded-full" title="Delete Forever"><i class='bx bx-trash'></i></a>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <div class="flex justify-center mt-4"><?= $pager_files->links('files') ?></div>
+                <?php else: ?>
+                    <div class="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
+                        <p class="text-gray-400 text-sm">No archived files.</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+
         </main>
     </div>
 
-    <!-- [NEW] LOGOUT MODAL -->
     <div id="logoutModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white p-6 rounded-xl shadow-2xl w-80 transform scale-100 transition-transform text-center">
             <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
@@ -148,7 +204,35 @@
     </div>
 
     <script>
-        // [NEW] LOGOUT LOGIC
+        // TAB SWITCHING LOGIC
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            
+            // Remove active style from all buttons
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('active', 'border-blue-500', 'text-blue-600');
+                el.classList.add('border-transparent', 'text-gray-500');
+            });
+
+            // Show selected tab
+            document.getElementById('tab-' + tabName).classList.remove('hidden');
+            
+            // Add active style to selected button
+            const activeBtn = document.getElementById('btn-' + tabName);
+            activeBtn.classList.add('active', 'border-blue-500', 'text-blue-600');
+            activeBtn.classList.remove('border-transparent', 'text-gray-500');
+
+            // Save active tab to localStorage
+            localStorage.setItem('activeArchiveTab', tabName);
+        }
+
+        // Initialize Tab on Load
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTab = localStorage.getItem('activeArchiveTab') || 'users';
+            switchTab(savedTab);
+        });
+
         function openLogoutModal() { document.getElementById('logoutModal').classList.remove('hidden'); }
         function closeLogoutModal() { document.getElementById('logoutModal').classList.add('hidden'); }
     </script>

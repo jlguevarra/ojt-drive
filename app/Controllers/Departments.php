@@ -14,8 +14,14 @@ class Departments extends BaseController {
         if(!$this->checkAccess()) return redirect()->to('admin/dashboard');
 
         $model = new DepartmentModel();
-        // [CHANGED] Only fetch non-archived departments
-        $data['departments'] = $model->where('is_archived', 0)->orderBy('id', 'DESC')->findAll();
+        
+        // [CHANGED] Use paginate(10) instead of findAll()
+        $data['departments'] = $model->where('is_archived', 0)
+                                     ->orderBy('id', 'DESC')
+                                     ->paginate(5);
+        
+        // [NEW] Pass the pager to the view
+        $data['pager'] = $model->pager;
         
         return view('manage_departments', $data);
     }
