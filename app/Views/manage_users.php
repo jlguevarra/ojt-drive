@@ -6,7 +6,29 @@
     <title>Manage Users - HCC Drive</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'); body { font-family: 'Inter', sans-serif; }</style>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'); 
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Simple styling for CodeIgniter Pagination */
+        .pagination { display: flex; justify-content: center; gap: 0.5rem; margin-top: 1.5rem; }
+        .pagination li { display: inline-block; }
+        .pagination li a, .pagination li span {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+            background-color: white;
+            color: #374151;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        .pagination li a:hover { background-color: #f3f4f6; color: #2563eb; }
+        .pagination li.active a, .pagination li.active span {
+            background-color: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+    </style>
 </head>
 <body class="bg-gray-50 h-screen flex overflow-hidden">
 
@@ -15,7 +37,6 @@
     <div class="flex-1 flex flex-col overflow-hidden">
         <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 shadow-sm z-10">
             <div class="text-xl font-bold text-gray-800">Manage Users</div>
-
             <div class="flex items-center space-x-4 ml-4">
                 <div class="text-right hidden sm:block">
                     <p class="text-sm font-medium text-gray-800"><?= session()->get('username') ?></p>
@@ -96,6 +117,11 @@
                     </tbody>
                 </table>
             </div>
+
+            <div class="mt-6 flex justify-center">
+                <?= $pager->links() ?>
+            </div>
+
         </main>
     </div>
 
@@ -106,34 +132,46 @@
                 <button onclick="document.getElementById('createModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600"><i class='bx bx-x text-2xl'></i></button>
             </div>
             <form action="<?= base_url('admin/createUser') ?>" method="post" class="space-y-4">
+                
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Full Name</label>
-                    <input type="text" name="username" required class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="text" name="username" value="<?= old('username') ?>" required class="w-full border <?= session('errors.username') ? 'border-red-500' : 'border-gray-300' ?> rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <?php if(session('errors.username')): ?>
+                        <p class="text-red-500 text-xs mt-1"><?= session('errors.username') ?></p>
+                    <?php endif; ?>
                 </div>
+
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" name="email" required class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="email" name="email" value="<?= old('email') ?>" required class="w-full border <?= session('errors.email') ? 'border-red-500' : 'border-gray-300' ?> rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <?php if(session('errors.email')): ?>
+                        <p class="text-red-500 text-xs mt-1"><?= session('errors.email') ?></p>
+                    <?php endif; ?>
                 </div>
+
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Password</label>
-                    <input type="password" name="password" required class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="password" name="password" required class="w-full border <?= session('errors.password') ? 'border-red-500' : 'border-gray-300' ?> rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <?php if(session('errors.password')): ?>
+                        <p class="text-red-500 text-xs mt-1"><?= session('errors.password') ?></p>
+                    <?php endif; ?>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Role</label>
                     <select name="role" id="create_role" onchange="toggleDepartment('create_role', 'create_dept_container')" class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none">
-                        <option value="faculty">Faculty</option>
-                        <option value="program_chair">Program Chair</option>
-                        <option value="admin">Administrator</option>
+                        <option value="faculty" <?= old('role') == 'faculty' ? 'selected' : '' ?>>Faculty</option>
+                        <option value="program_chair" <?= old('role') == 'program_chair' ? 'selected' : '' ?>>Program Chair</option>
+                        <option value="admin" <?= old('role') == 'admin' ? 'selected' : '' ?>>Administrator</option>
                     </select>
                 </div>
 
                 <div id="create_dept_container">
                     <label class="block text-sm font-bold text-gray-700 mb-1">Department <span class="text-red-500">*</span></label>
-                    <select required name="department_id" id="create_dept_select" class="w-full border rounded px-3 py-2 bg-gray-50">
+                    <select name="department_id" id="create_dept_select" class="w-full border rounded px-3 py-2 bg-gray-50">
                         <option value="">-- Select Department --</option>
                         <?php if(!empty($departments)): foreach($departments as $dept): ?>
-                            <option value="<?= $dept['id'] ?>"><?= $dept['code'] ?> - <?= $dept['name'] ?></option>
+                            <option value="<?= $dept['id'] ?>" <?= old('department_id') == $dept['id'] ? 'selected' : '' ?>><?= $dept['code'] ?> - <?= $dept['name'] ?></option>
                         <?php endforeach; endif; ?>
                     </select>
                     <p class="text-xs text-gray-500 mt-1">Required for Faculty and Program Chairs.</p>
@@ -151,26 +189,35 @@
                 <button onclick="document.getElementById('editModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600"><i class='bx bx-x text-2xl'></i></button>
             </div>
             <form action="<?= base_url('admin/updateUser') ?>" method="post" class="space-y-4">
-                <input type="hidden" name="user_id" id="edit_user_id">
+                <input type="hidden" name="user_id" id="edit_user_id" value="<?= old('user_id') ?>">
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Full Name</label>
-                    <input type="text" name="username" id="edit_username" required class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="text" name="username" id="edit_username" value="<?= old('username') ?>" required class="w-full border <?= session('errors.username') ? 'border-red-500' : 'border-gray-300' ?> rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <?php if(session('errors.username')): ?>
+                        <p class="text-red-500 text-xs mt-1"><?= session('errors.username') ?></p>
+                    <?php endif; ?>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" name="email" id="edit_email" required class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="email" name="email" id="edit_email" value="<?= old('email') ?>" required class="w-full border <?= session('errors.email') ? 'border-red-500' : 'border-gray-300' ?> rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <?php if(session('errors.email')): ?>
+                        <p class="text-red-500 text-xs mt-1"><?= session('errors.email') ?></p>
+                    <?php endif; ?>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">New Password (Optional)</label>
-                    <input type="password" name="password" placeholder="Leave blank to keep current" class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <input type="password" name="password" placeholder="Leave blank to keep current" class="w-full border <?= session('errors.password') ? 'border-red-500' : 'border-gray-300' ?> rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <?php if(session('errors.password')): ?>
+                        <p class="text-red-500 text-xs mt-1"><?= session('errors.password') ?></p>
+                    <?php endif; ?>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Role</label>
                     <select name="role" id="edit_role" onchange="toggleDepartment('edit_role', 'edit_dept_container')" class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none">
-                        <option value="faculty">Faculty</option>
-                        <option value="program_chair">Program Chair</option>
-                        <option value="admin">Administrator</option>
+                        <option value="faculty" <?= old('role') == 'faculty' ? 'selected' : '' ?>>Faculty</option>
+                        <option value="program_chair" <?= old('role') == 'program_chair' ? 'selected' : '' ?>>Program Chair</option>
+                        <option value="admin" <?= old('role') == 'admin' ? 'selected' : '' ?>>Administrator</option>
                     </select>
                 </div>
 
@@ -179,7 +226,7 @@
                     <select name="department_id" id="edit_department_id" class="w-full border rounded px-3 py-2 bg-gray-50">
                         <option value="">-- Select Department --</option>
                         <?php if(!empty($departments)): foreach($departments as $dept): ?>
-                            <option value="<?= $dept['id'] ?>"><?= $dept['code'] ?> - <?= $dept['name'] ?></option>
+                            <option value="<?= $dept['id'] ?>" <?= old('department_id') == $dept['id'] ? 'selected' : '' ?>><?= $dept['code'] ?> - <?= $dept['name'] ?></option>
                         <?php endforeach; endif; ?>
                     </select>
                 </div>
@@ -190,23 +237,20 @@
     </div>
 
     <script>
-        // LOGIC TO HIDE/SHOW DEPARTMENT
         function toggleDepartment(roleSelectId, deptContainerId) {
             const role = document.getElementById(roleSelectId).value;
             const container = document.getElementById(deptContainerId);
             const select = container.querySelector('select');
 
             if (role === 'admin') {
-                container.classList.add('hidden'); // Hide container
-                select.value = ""; // Clear selection so logic doesn't get confused
+                container.classList.add('hidden'); 
             } else {
-                container.classList.remove('hidden'); // Show container
+                container.classList.remove('hidden');
             }
         }
 
         function openCreateModal() { 
             document.getElementById('createModal').classList.remove('hidden');
-            // Run check immediately in case default is 'admin' (unlikely but safe)
             toggleDepartment('create_role', 'create_dept_container'); 
         }
         
@@ -217,11 +261,23 @@
             document.getElementById('edit_role').value = user.role;
             document.getElementById('edit_department_id').value = user.department_id || "";
             
-            // Check Role status immediately to Show/Hide Dept
             toggleDepartment('edit_role', 'edit_dept_container');
-
             document.getElementById('editModal').classList.remove('hidden');
         }
+
+        // Logic to keep Modal Open on Validation Error
+        document.addEventListener('DOMContentLoaded', function() {
+            <?php if(session('errors')): ?>
+                const oldUserId = "<?= old('user_id') ?>";
+                if (oldUserId) {
+                    document.getElementById('editModal').classList.remove('hidden');
+                    toggleDepartment('edit_role', 'edit_dept_container');
+                } else {
+                    document.getElementById('createModal').classList.remove('hidden');
+                    toggleDepartment('create_role', 'create_dept_container');
+                }
+            <?php endif; ?>
+        });
     </script>
 </body>
 </html>

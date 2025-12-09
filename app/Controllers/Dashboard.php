@@ -160,22 +160,24 @@ class Dashboard extends BaseController {
 
         $db = \Config\Database::connect();
         $myId = $session->get('id');
+        $userModel = new UserModel(); // Use Model for pagination capabilities
         
-        $users = $db->table('users')
-                    ->select('users.*, departments.code as dept_code')
-                    ->join('departments', 'departments.id = users.department_id', 'left')
-                    ->where('users.id !=', $myId)
-                    ->where('users.is_archived', 0) 
-                    ->orderBy('users.created_at', 'DESC')
-                    ->get()->getResultArray();
+        // 1. Fetch Paginated Users
+        // Note: paginate(10) means 10 users per page.
+        $data['users'] = $userModel->select('users.*, departments.code as dept_code')
+                                   ->join('departments', 'departments.id = users.department_id', 'left')
+                                   ->where('users.id !=', $myId)
+                                   ->where('users.is_archived', 0) // Explicit prefix
+                                   ->orderBy('users.created_at', 'DESC')
+                                   ->paginate(5); 
         
-        // [FIXED] Filter archived departments from the dropdown
-        $departments = $db->table('departments')
-                          ->where('is_archived', 0)
-                          ->get()->getResultArray();
+        // 2. Pass Pager to View
+        $data['pager'] = $userModel->pager;
 
-        $data['users'] = $users;
-        $data['departments'] = $departments;
+        // 3. Fetch Departments for Dropdown (Keep as is)
+        $data['departments'] = $db->table('departments')
+                                  ->where('is_archived', 0)
+                                  ->get()->getResultArray();
 
         return view('manage_users', $data);
     }
