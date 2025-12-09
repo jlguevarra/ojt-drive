@@ -74,10 +74,10 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-xs">
-                                        <?= substr($log['username'], 0, 1) ?>
+                                        <?= substr($log['user_name'], 0, 1) ?>
                                     </div>
                                     <div class="ml-3">
-                                        <div class="text-sm font-medium text-gray-900"><?= esc($log['username']) ?></div>
+                                        <div class="text-sm font-medium text-gray-900"><?= esc($log['user_name']) ?></div>
                                     </div>
                                 </div>
                             </td>
