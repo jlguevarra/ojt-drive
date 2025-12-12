@@ -114,8 +114,8 @@
         
         <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-16 flex items-center justify-between px-6 pl-14 md:pl-6 shadow-sm z-10 transition-colors duration-300">
             <div class="text-xl font-bold text-gray-800 dark:text-white">System Logs</div>
-            
             <div class="flex items-center space-x-4 ml-4">
+                
                 <button onclick="toggleTheme()" class="text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-yellow-400 transition-colors focus:outline-none">
                     <i class='bx bxs-sun text-2xl dark:hidden'></i>
                     <i class='bx bxs-moon text-2xl hidden dark:block'></i>
@@ -147,69 +147,71 @@
             </div>
 
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors duration-300">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead class="bg-gray-50 dark:bg-gray-700">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Timestamp</th>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">User</th>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Action</th>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Details</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        <?php if(!empty($logs)): foreach($logs as $log): ?>
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                            
-                            <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400 font-mono">
-                                <?= date('M d, Y h:i:s A', strtotime($log['created_at'])) ?>
-                            </td>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Timestamp</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">User</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Action</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Details</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            <?php if(!empty($logs)): foreach($logs as $log): ?>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                
+                                <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400 font-mono">
+                                    <?= date('M d, Y h:i:s A', strtotime($log['created_at'])) ?>
+                                </td>
 
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div class="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 font-bold text-xs print:hidden">
-                                        <?= substr($log['user_name'], 0, 1) ?>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 font-bold text-xs print:hidden">
+                                            <?= substr($log['user_name'], 0, 1) ?>
+                                        </div>
+                                        <div class="ml-3 print:ml-0">
+                                            <div class="text-sm font-medium text-gray-900 dark:text-white"><?= esc($log['user_name']) ?></div>
+                                            <div class="text-xs text-gray-400 dark:text-gray-500 capitalize"><?= str_replace('_', ' ', $log['role']) ?></div>
+                                        </div>
                                     </div>
-                                    <div class="ml-3 print:ml-0">
-                                        <div class="text-sm font-medium text-gray-900 dark:text-white"><?= esc($log['user_name']) ?></div>
-                                        <div class="text-xs text-gray-400 dark:text-gray-500 capitalize"><?= str_replace('_', ' ', $log['role']) ?></div>
-                                    </div>
-                                </div>
-                            </td>
+                                </td>
 
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <?php 
-                                    $color = 'gray';
-                                    $icon = 'bx-radio-circle';
-                                    $act = $log['action'];
-                                    
-                                    if(stripos($act, 'Login') !== false) { $color = 'green'; $icon = 'bx-log-in-circle'; }
-                                    elseif(stripos($act, 'Upload') !== false) { $color = 'blue'; $icon = 'bx-cloud-upload'; }
-                                    elseif(stripos($act, 'Delete') !== false || stripos($act, 'Archive') !== false) { $color = 'red'; $icon = 'bx-trash'; }
-                                    elseif(stripos($act, 'Create') !== false) { $color = 'purple'; $icon = 'bx-user-plus'; }
-                                    elseif(stripos($act, 'Update') !== false) { $color = 'indigo'; $icon = 'bx-edit'; }
-                                    elseif(stripos($act, 'Restore') !== false) { $color = 'teal'; $icon = 'bx-revision'; }
-                                ?>
-                                <span class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-<?= $color ?>-50 dark:bg-<?= $color ?>-900/30 text-<?= $color ?>-700 dark:text-<?= $color ?>-300 border border-<?= $color ?>-200 dark:border-<?= $color ?>-800">
-                                    <i class='bx <?= $icon ?> mr-1'></i>
-                                    <?= esc($log['action']) ?>
-                                </span>
-                            </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <?php 
+                                        $color = 'gray';
+                                        $icon = 'bx-radio-circle';
+                                        $act = $log['action'];
+                                        
+                                        if(stripos($act, 'Login') !== false) { $color = 'green'; $icon = 'bx-log-in-circle'; }
+                                        elseif(stripos($act, 'Upload') !== false) { $color = 'blue'; $icon = 'bx-cloud-upload'; }
+                                        elseif(stripos($act, 'Delete') !== false || stripos($act, 'Archive') !== false) { $color = 'red'; $icon = 'bx-trash'; }
+                                        elseif(stripos($act, 'Create') !== false) { $color = 'purple'; $icon = 'bx-user-plus'; }
+                                        elseif(stripos($act, 'Update') !== false) { $color = 'indigo'; $icon = 'bx-edit'; }
+                                        elseif(stripos($act, 'Restore') !== false) { $color = 'teal'; $icon = 'bx-revision'; }
+                                    ?>
+                                    <span class="px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-<?= $color ?>-50 dark:bg-<?= $color ?>-900/30 text-<?= $color ?>-700 dark:text-<?= $color ?>-300 border border-<?= $color ?>-200 dark:border-<?= $color ?>-800">
+                                        <i class='bx <?= $icon ?> mr-1'></i>
+                                        <?= esc($log['action']) ?>
+                                    </span>
+                                </td>
 
-                            <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300 break-all max-w-xs">
-                                <?= esc($log['details']) ?>
-                            </td>
+                                <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300 break-all max-w-xs">
+                                    <?= esc($log['details']) ?>
+                                </td>
 
-                        </tr>
-                        <?php endforeach; else: ?>
-                        <tr>
-                            <td colspan="4" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400 italic">
-                                <i class='bx bx-history text-4xl mb-2 text-gray-300 dark:text-gray-600'></i>
-                                <p>No activity recorded yet.</p>
-                            </td>
-                        </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+                            </tr>
+                            <?php endforeach; else: ?>
+                            <tr>
+                                <td colspan="4" class="px-6 py-10 text-center text-gray-500 dark:text-gray-400 italic">
+                                    <i class='bx bx-history text-4xl mb-2 text-gray-300 dark:text-gray-600'></i>
+                                    <p>No activity recorded yet.</p>
+                                </td>
+                            </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <div class="mt-6 flex justify-center">
@@ -219,5 +221,34 @@
         </main>
     </div>
 
+    <div id="logoutModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl w-80 transform scale-100 transition-transform text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                <i class='bx bx-log-out text-2xl text-red-600'></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-2">Confirm Logout</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Are you sure you want to sign out of your account?</p>
+            <div class="flex justify-center space-x-3">
+                <button onclick="closeLogoutModal()" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 text-sm font-medium transition-colors">Cancel</button>
+                <a href="<?= base_url('/logout') ?>" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium shadow-md shadow-red-500/30 transition-colors">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // GLOBAL THEME LOGIC
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        function openLogoutModal() { document.getElementById('logoutModal').classList.remove('hidden'); }
+        function closeLogoutModal() { document.getElementById('logoutModal').classList.add('hidden'); }
+    </script>
 </body>
 </html>

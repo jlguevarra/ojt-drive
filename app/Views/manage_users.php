@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <script>
-        // Apply theme immediately
+        // Apply theme immediately to avoid flash
         if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         } else {
@@ -97,55 +97,57 @@
             </div>
 
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors duration-300">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead class="bg-gray-50 dark:bg-gray-700">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase">User Profile</th>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase">Role</th>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase">Department</th>
-                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase">Email</th>
-                            <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        <?php if(!empty($users)): foreach($users as $user): ?>
-                        <tr class="hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div class="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 flex items-center justify-center font-bold">
-                                        <?= substr($user['username'], 0, 1) ?>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase">User Profile</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase">Role</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase">Department</th>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 dark:text-gray-300 uppercase">Email</th>
+                                <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            <?php if(!empty($users)): foreach($users as $user): ?>
+                            <tr class="hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 flex items-center justify-center font-bold">
+                                            <?= substr($user['username'], 0, 1) ?>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900 dark:text-white"><?= esc($user['username']) ?></div>
+                                            <div class="text-xs text-gray-400 dark:text-gray-500">ID: #<?= $user['id'] ?></div>
+                                        </div>
                                     </div>
-                                    <div class="ml-4">
-                                        <div class="text-sm font-medium text-gray-900 dark:text-white"><?= esc($user['username']) ?></div>
-                                        <div class="text-xs text-gray-400 dark:text-gray-500">ID: #<?= $user['id'] ?></div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300">
-                                    <?= ucfirst(str_replace('_', ' ', $user['role'])) ?>
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <?php if(!empty($user['dept_code'])): ?>
-                                    <span class="px-2 py-1 text-xs font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 rounded border border-blue-200 dark:border-blue-800">
-                                        <?= esc($user['dept_code']) ?>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300">
+                                        <?= ucfirst(str_replace('_', ' ', $user['role'])) ?>
                                     </span>
-                                <?php else: ?>
-                                    <span class="text-gray-400 text-xs">-</span>
-                                <?php endif; ?>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"><?= esc($user['email']) ?></td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                <button onclick='openEditModal(<?= json_encode($user) ?>)' class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 bg-blue-50 dark:bg-gray-700 p-2 rounded hover:bg-blue-100 dark:hover:bg-gray-600 transition-colors"><i class='bx bx-edit'></i></button>
-                                <a href="<?= base_url('admin/deleteUser/'.$user['id']) ?>" onclick="return confirm('Delete this user?')" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 bg-red-50 dark:bg-gray-700 p-2 rounded hover:bg-red-100 dark:hover:bg-gray-600 transition-colors"><i class='bx bx-trash'></i></a>
-                            </td>
-                        </tr>
-                        <?php endforeach; else: ?>
-                        <tr><td colspan="5" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">No users found.</td></tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <?php if(!empty($user['dept_code'])): ?>
+                                        <span class="px-2 py-1 text-xs font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 rounded border border-blue-200 dark:border-blue-800">
+                                            <?= esc($user['dept_code']) ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="text-gray-400 text-xs">-</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"><?= esc($user['email']) ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                    <button onclick='openEditModal(<?= json_encode($user) ?>)' class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 bg-blue-50 dark:bg-gray-700 p-2 rounded hover:bg-blue-100 dark:hover:bg-gray-600 transition-colors"><i class='bx bx-edit'></i></button>
+                                    <a href="<?= base_url('admin/deleteUser/'.$user['id']) ?>" onclick="return confirm('Delete this user?')" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 bg-red-50 dark:bg-gray-700 p-2 rounded hover:bg-red-100 dark:hover:bg-gray-600 transition-colors"><i class='bx bx-trash'></i></a>
+                                </td>
+                            </tr>
+                            <?php endforeach; else: ?>
+                            <tr><td colspan="5" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">No users found.</td></tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <div class="mt-6 flex justify-center">
@@ -166,16 +168,25 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
                     <input type="text" name="username" value="<?= old('username') ?>" required class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-white">
+                    <?php if(session('errors.username')): ?>
+                        <p class="text-red-500 text-xs mt-1"><?= session('errors.username') ?></p>
+                    <?php endif; ?>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
                     <input type="email" name="email" value="<?= old('email') ?>" required class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-white">
+                    <?php if(session('errors.email')): ?>
+                        <p class="text-red-500 text-xs mt-1"><?= session('errors.email') ?></p>
+                    <?php endif; ?>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
                     <input type="password" name="password" required class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-white">
+                    <?php if(session('errors.password')): ?>
+                        <p class="text-red-500 text-xs mt-1"><?= session('errors.password') ?></p>
+                    <?php endif; ?>
                 </div>
                 
                 <div>
@@ -215,16 +226,25 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
                     <input type="text" name="username" id="edit_username" value="<?= old('username') ?>" required class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-white">
+                    <?php if(session('errors.username')): ?>
+                        <p class="text-red-500 text-xs mt-1"><?= session('errors.username') ?></p>
+                    <?php endif; ?>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
                     <input type="email" name="email" id="edit_email" value="<?= old('email') ?>" required class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-white">
+                    <?php if(session('errors.email')): ?>
+                        <p class="text-red-500 text-xs mt-1"><?= session('errors.email') ?></p>
+                    <?php endif; ?>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">New Password (Optional)</label>
                     <input type="password" name="password" placeholder="Leave blank to keep current" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-white">
+                    <?php if(session('errors.password')): ?>
+                        <p class="text-red-500 text-xs mt-1"><?= session('errors.password') ?></p>
+                    <?php endif; ?>
                 </div>
                 
                 <div>
@@ -256,8 +276,12 @@
             const role = document.getElementById(roleSelectId).value;
             const container = document.getElementById(deptContainerId);
             const select = container.querySelector('select');
-            if (role === 'admin') { container.classList.add('hidden'); } 
-            else { container.classList.remove('hidden'); }
+
+            if (role === 'admin') {
+                container.classList.add('hidden'); 
+            } else {
+                container.classList.remove('hidden');
+            }
         }
 
         function openCreateModal() { 
@@ -271,6 +295,7 @@
             document.getElementById('edit_email').value = user.email;
             document.getElementById('edit_role').value = user.role;
             document.getElementById('edit_department_id').value = user.department_id || "";
+            
             toggleDepartment('edit_role', 'edit_dept_container');
             document.getElementById('editModal').classList.remove('hidden');
         }
