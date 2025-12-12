@@ -35,7 +35,7 @@
     <?= view('components/sidebar_admin'); ?>
 
     <div class="flex-1 flex flex-col overflow-hidden">
-        <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 shadow-sm z-10">
+        <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 pl-14 md:pl-6 shadow-sm z-10">
             <div class="text-xl font-bold text-gray-800">Manage Users</div>
             <div class="flex items-center space-x-4 ml-4">
                 <div class="text-right hidden sm:block">

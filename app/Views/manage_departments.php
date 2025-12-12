@@ -10,7 +10,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'); 
         body { font-family: 'Inter', sans-serif; }
 
-        /* [NEW] Pagination CSS */
+        /* Pagination CSS */
         .pagination { display: flex; justify-content: center; gap: 0.5rem; margin-top: 1.5rem; }
         .pagination li { display: inline-block; }
         .pagination li a, .pagination li span {
@@ -36,7 +36,7 @@
 
     <div class="flex-1 flex flex-col overflow-hidden">
         
-        <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 shadow-sm z-10">
+        <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 pl-14 md:pl-6 shadow-sm z-10">
             <h1 class="text-xl font-bold text-gray-800">Departments</h1>
             
             <div class="flex items-center space-x-4">

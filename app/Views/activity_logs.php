@@ -104,8 +104,8 @@
 
     <div class="flex-1 flex flex-col overflow-hidden print-wrapper">
         
-        <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 shadow-sm z-10">
-            <div class="font-semibold text-gray-700">System Logs</div>
+        <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 pl-14 md:pl-6 shadow-sm z-10">
+            <div class="text-xl font-bold text-gray-800">System Logs</div>
             <div class="flex items-center space-x-4 ml-4">
                 <div class="text-right hidden sm:block">
                     <p class="text-sm font-medium text-gray-800"><?= session()->get('username') ?></p>
