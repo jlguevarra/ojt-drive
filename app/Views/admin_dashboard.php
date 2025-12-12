@@ -17,7 +17,7 @@
 
     <div class="flex-1 flex flex-col overflow-hidden">
         
-        <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 shadow-sm z-10">
+        <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 pl-14 md:pl-6 shadow-sm z-10">
             <div class="flex items-center flex-1 max-w-3xl">
                 <div class="relative w-full max-w-md group mr-4">
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -365,4 +365,4 @@
         }
     </script>
 </body>
-</html>
+</html> 

@@ -10,7 +10,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'); 
         body { font-family: 'Inter', sans-serif; }
 
-        /* [NEW] Pagination CSS (Same as Manage Users) */
+        /* PAGINATION STYLES */
         .pagination { display: flex; justify-content: center; gap: 0.5rem; margin-top: 1.5rem; }
         .pagination li { display: inline-block; }
         .pagination li a, .pagination li span {
@@ -28,13 +28,81 @@
             color: white;
             border-color: #2563eb;
         }
+
+        /* [NEW] PRINT STYLES */
+        @media print {
+            /* 1. Reset Layout to normal document flow */
+            body, html, .flex-1, main {
+                height: auto !important;
+                overflow: visible !important;
+                display: block !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+            }
+
+            /* 2. Hide Sidebar, Header, Buttons, and Pagination */
+            /* We hide all direct children of body except the main content wrapper */
+            body > *:not(.flex-col) { display: none !important; }
+            
+            /* Hide specific UI elements inside the main wrapper */
+            header, 
+            .pagination, 
+            button, 
+            a[href*="logout"] { 
+                display: none !important; 
+            }
+
+            /* 3. Fix Table Styling for Paper */
+            table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                font-size: 12px; /* Smaller font for logs */
+            }
+            th, td {
+                border: 1px solid #000 !important; /* Force visible borders */
+                padding: 8px !important;
+                color: #000 !important; /* Force black text */
+            }
+            thead {
+                background-color: #f3f4f6 !important;
+                -webkit-print-color-adjust: exact; /* Print background colors */
+            }
+            
+            /* 4. Simplify Status Badges */
+            .rounded-full {
+                border: 1px solid #000 !important;
+                color: #000 !important;
+                background: none !important;
+                padding: 2px 6px;
+            }
+            
+            /* 5. Custom Header for Print */
+            main::before {
+                content: "HCC Drive - System Activity Logs";
+                display: block;
+                font-size: 18px;
+                font-weight: bold;
+                margin-bottom: 10px;
+                text-align: center;
+            }
+            main::after {
+                content: "Generated on: " attr(data-date);
+                display: block;
+                font-size: 10px;
+                color: #666;
+                margin-top: 20px;
+                text-align: right;
+            }
+        }
     </style>
 </head>
-<body class="bg-gray-50 h-screen flex overflow-hidden">
+<body class="bg-gray-50 h-screen flex overflow-hidden" data-date="<?= date('Y-m-d H:i:s') ?>">
 
     <?= view('components/sidebar_admin'); ?>
 
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <div class="flex-1 flex flex-col overflow-hidden print-wrapper">
         
         <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 shadow-sm z-10">
             <div class="font-semibold text-gray-700">System Logs</div>
@@ -52,7 +120,7 @@
             </div>
         </header>
 
-        <main class="flex-1 overflow-y-auto p-8">
+        <main class="flex-1 overflow-y-auto p-8" data-date="<?= date('Y-m-d H:i:s') ?>">
             
             <div class="flex justify-between items-center mb-6">
                 <div>
@@ -84,10 +152,10 @@
 
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
-                                    <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-xs">
+                                    <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-xs print:hidden">
                                         <?= substr($log['user_name'], 0, 1) ?>
                                     </div>
-                                    <div class="ml-3">
+                                    <div class="ml-3 print:ml-0">
                                         <div class="text-sm font-medium text-gray-900"><?= esc($log['user_name']) ?></div>
                                         <div class="text-xs text-gray-400 capitalize"><?= str_replace('_', ' ', $log['role']) ?></div>
                                     </div>
