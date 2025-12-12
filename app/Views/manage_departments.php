@@ -59,6 +59,11 @@
             <h1 class="text-xl font-bold text-gray-800 dark:text-white">Departments</h1>
             
             <div class="flex items-center space-x-4">
+                <button onclick="toggleTheme()" class="text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-yellow-400 transition-colors focus:outline-none">
+                    <i class='bx bxs-sun text-2xl dark:hidden'></i>
+                    <i class='bx bxs-moon text-2xl hidden dark:block'></i>
+                </button>
+
                 <div class="text-right hidden sm:block">
                     <p class="text-sm font-medium text-gray-800 dark:text-gray-200"><?= session()->get('username') ?></p>
                     <p class="text-xs text-gray-500 dark:text-gray-400 uppercase"><?= session()->get('role') ?></p>
