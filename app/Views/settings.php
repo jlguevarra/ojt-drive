@@ -6,13 +6,16 @@
     <title>Account Settings - HCC Drive</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'); body { font-family: 'Inter', sans-serif; }</style>
-    
     <script>
-        tailwind.config = {
-            darkMode: 'class', // Enables dark mode based on 'dark' class on HTML tag
+        // Init Theme
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
         }
+        tailwind.config = { darkMode: 'class' };
     </script>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'); body { font-family: 'Inter', sans-serif; }</style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 h-screen flex overflow-hidden transition-colors duration-300">
 
@@ -36,6 +39,11 @@
             <h1 class="text-xl font-bold text-gray-800 dark:text-white">Account Settings</h1>
             
             <div class="flex items-center space-x-4">
+                <button onclick="toggleTheme()" class="text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-yellow-400 transition-colors focus:outline-none">
+                    <i class='bx bxs-sun text-2xl dark:hidden'></i>
+                    <i class='bx bxs-moon text-2xl hidden dark:block'></i>
+                </button>
+
                 <div class="text-right hidden sm:block">
                     <p class="text-sm font-medium text-gray-800 dark:text-gray-200"><?= session()->get('username') ?></p>
                     <p class="text-xs text-gray-500 dark:text-gray-400 uppercase"><?= $role ?></p>
@@ -53,14 +61,14 @@
             <div class="max-w-2xl mx-auto">
                 
                 <?php if(session()->getFlashdata('success')):?>
-                    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-r shadow-sm flex items-center">
+                    <div class="bg-green-100 dark:bg-green-900 border-l-4 border-green-500 text-green-700 dark:text-green-300 p-4 mb-6 rounded-r shadow-sm flex items-center">
                         <i class='bx bx-check-circle mr-2 text-xl'></i>
                         <?= session()->getFlashdata('success') ?>
                     </div>
                 <?php endif;?>
 
                 <?php if(session()->getFlashdata('errors')):?>
-                    <div class="bg-red-50 border border-red-200 text-red-600 p-4 mb-6 rounded-lg text-sm">
+                    <div class="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-600 dark:text-red-300 p-4 mb-6 rounded-lg text-sm">
                         <?php foreach(session()->getFlashdata('errors') as $error): ?>
                             <p class="flex items-center"><i class='bx bx-error-circle mr-2'></i> <?= $error ?></p>
                         <?php endforeach; ?>
@@ -68,69 +76,47 @@
                 <?php endif;?>
 
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors duration-300">
-                    
                     <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
                         <h3 class="text-lg font-medium text-gray-900 dark:text-white">Profile Information</h3>
                         <p class="text-sm text-gray-500 dark:text-gray-400">Update your personal details and password.</p>
                     </div>
                     
-                    <div class="p-6 space-y-6">
+                    <form action="<?= base_url('settings/update') ?>" method="post" class="p-6 space-y-6">
                         
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Appearance</label>
-                            <div class="grid grid-cols-3 gap-4">
-                                <button onclick="setTheme('light')" class="theme-btn border rounded-lg p-3 flex flex-col items-center justify-center space-y-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500" id="btn-light">
-                                    <i class='bx bx-sun text-2xl text-yellow-500'></i>
-                                    <span class="text-xs font-medium text-gray-700 dark:text-gray-300">Light</span>
-                                </button>
-                                <button onclick="setTheme('dark')" class="theme-btn border rounded-lg p-3 flex flex-col items-center justify-center space-y-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500" id="btn-dark">
-                                    <i class='bx bx-moon text-2xl text-blue-500'></i>
-                                    <span class="text-xs font-medium text-gray-700 dark:text-gray-300">Dark</span>
-                                </button>
-                                <button onclick="setTheme('system')" class="theme-btn border rounded-lg p-3 flex flex-col items-center justify-center space-y-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500" id="btn-system">
-                                    <i class='bx bx-desktop text-2xl text-gray-500'></i>
-                                    <span class="text-xs font-medium text-gray-700 dark:text-gray-300">System</span>
-                                </button>
-                            </div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
+                            <input type="text" value="<?= session()->get('email') ?>" disabled class="block w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm">
+                            <p class="text-xs text-gray-400 mt-1">Email cannot be changed. Contact admin for help.</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+                            <input type="text" name="username" value="<?= session()->get('username') ?>" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-<?= $themeColor ?>-500 focus:border-<?= $themeColor ?>-500 text-sm transition-colors">
                         </div>
 
                         <hr class="border-gray-100 dark:border-gray-700 my-4">
 
-                        <form action="<?= base_url('settings/update') ?>" method="post" class="space-y-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
-                                <input type="text" value="<?= session()->get('email') ?>" disabled class="block w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm">
-                                <p class="text-xs text-gray-400 mt-1">Email cannot be changed. Contact admin for help.</p>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
-                                <input type="text" name="username" value="<?= session()->get('username') ?>" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-<?= $themeColor ?>-500 focus:border-<?= $themeColor ?>-500 text-sm transition-colors">
-                            </div>
-
-                            <hr class="border-gray-100 dark:border-gray-700 my-4">
-
-                            <div>
-                                <h4 class="text-sm font-bold text-gray-800 dark:text-gray-200 mb-4">Change Password</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">New Password</label>
-                                        <input type="password" name="password" placeholder="Leave blank to keep current" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-<?= $themeColor ?>-500 focus:border-<?= $themeColor ?>-500 text-sm transition-colors">
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm Password</label>
-                                        <input type="password" name="confpassword" placeholder="Confirm new password" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-<?= $themeColor ?>-500 focus:border-<?= $themeColor ?>-500 text-sm transition-colors">
-                                    </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-gray-800 dark:text-gray-200 mb-4">Change Password</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">New Password</label>
+                                    <input type="password" name="password" placeholder="Leave blank to keep current" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-<?= $themeColor ?>-500 focus:border-<?= $themeColor ?>-500 text-sm transition-colors">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm Password</label>
+                                    <input type="password" name="confpassword" placeholder="Confirm new password" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-<?= $themeColor ?>-500 focus:border-<?= $themeColor ?>-500 text-sm transition-colors">
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="pt-4 flex justify-end">
-                                <button type="submit" class="bg-<?= $themeColor ?>-600 hover:bg-<?= $themeColor ?>-700 text-white font-medium py-2 px-6 rounded-lg shadow-md transition-all transform hover:scale-105">
-                                    Save Changes
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                        <div class="pt-4 flex justify-end">
+                            <button type="submit" class="bg-<?= $themeColor ?>-600 hover:bg-<?= $themeColor ?>-700 text-white font-medium py-2 px-6 rounded-lg shadow-md transition-all transform hover:scale-105">
+                                Save Changes
+                            </button>
+                        </div>
+
+                    </form>
                 </div>
             </div>
         </main>
@@ -153,41 +139,6 @@
     <script>
         function openLogoutModal() { document.getElementById('logoutModal').classList.remove('hidden'); }
         function closeLogoutModal() { document.getElementById('logoutModal').classList.add('hidden'); }
-
-        // --- THEME LOGIC ---
-        function setTheme(theme) {
-            const html = document.documentElement;
-            const buttons = document.querySelectorAll('.theme-btn');
-            
-            // Visual Update
-            buttons.forEach(btn => btn.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50', 'dark:bg-gray-600', 'border-blue-500'));
-            const activeBtn = document.getElementById('btn-' + theme);
-            if(activeBtn) {
-                activeBtn.classList.add('ring-2', 'ring-blue-500', 'bg-blue-50', 'dark:bg-gray-600', 'border-blue-500');
-            }
-
-            // Logic
-            if (theme === 'dark') {
-                html.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
-            } else if (theme === 'light') {
-                html.classList.remove('dark');
-                localStorage.setItem('theme', 'light');
-            } else {
-                localStorage.setItem('theme', 'system');
-                if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                    html.classList.add('dark');
-                } else {
-                    html.classList.remove('dark');
-                }
-            }
-        }
-
-        // Initialize Theme on Page Load
-        (function() {
-            const savedTheme = localStorage.getItem('theme') || 'system';
-            setTheme(savedTheme);
-        })();
     </script>
 </body>
 </html>
