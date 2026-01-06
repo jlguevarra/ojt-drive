@@ -7,8 +7,11 @@ class FileModel extends Model
     protected $table = 'files';
     protected $primaryKey = 'id';
     
-    // We REMOVED 'folder' from this list.
-    // We ADDED 'folder_id' and 'department_id'.
+    // [UPDATED] Enable timestamps
+    protected $useTimestamps = true; 
+    protected $createdField  = 'created_at';
+    protected $updatedField  = 'updated_at';
+
     protected $allowedFields = [
         'user_id', 
         'department_id', 
@@ -16,7 +19,7 @@ class FileModel extends Model
         'filename', 
         'file_path', 
         'file_size', 
-        'created_at',
+        // 'created_at' and 'updated_at' are handled automatically by $useTimestamps
         'is_archived'
     ];
 }

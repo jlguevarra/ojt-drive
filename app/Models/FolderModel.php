@@ -6,5 +6,11 @@ class FolderModel extends Model
 {
     protected $table = 'folders';
     protected $primaryKey = 'id';
-    protected $allowedFields = ['parent_id', 'name', 'department_id', 'created_at', 'is_archived'];
-}   
+    
+    // [UPDATED] Enable timestamps
+    protected $useTimestamps = true;
+    protected $createdField  = 'created_at';
+    protected $updatedField  = 'updated_at';
+
+    protected $allowedFields = ['parent_id', 'name', 'department_id', 'is_archived'];
+}

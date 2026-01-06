@@ -26,7 +26,7 @@ $routes->group('admin', ['filter' => 'authGuard'], function($routes){
     $routes->get('logs', 'Dashboard::logs');
     $routes->get('departments', 'Departments::index'); 
 
-    // [NEW] ARCHIVE ROUTES
+    // ARCHIVE ROUTES
     $routes->get('archive', 'Archive::index');
     $routes->get('archive/restore/(:segment)/(:num)', 'Archive::restore/$1/$2');
     $routes->get('archive/delete/(:segment)/(:num)', 'Archive::delete_permanent/$1/$2');
@@ -46,12 +46,15 @@ $routes->group('faculty', ['filter' => 'authGuard'], function($routes){
 
 // 6. FILE & FOLDER HANDLING
 $routes->post('/file/upload', 'FileHandler::upload', ['filter' => 'authGuard']);
+// [NEW] Upload Folder Route
+$routes->post('/file/upload_folder', 'FileHandler::upload_folder', ['filter' => 'authGuard']);
+
 $routes->get('/file/download/(:num)', 'FileHandler::download/$1', ['filter' => 'authGuard']);
-$routes->get('/file/delete/(:num)', 'FileHandler::delete/$1', ['filter' => 'authGuard']); // Now Archives
+$routes->get('/file/delete/(:num)', 'FileHandler::delete/$1', ['filter' => 'authGuard']); // Moves to Archive
 $routes->get('/file/preview/(:num)', 'FileHandler::preview/$1', ['filter' => 'authGuard']);
 
 $routes->post('/folder/create', 'FileHandler::create_folder', ['filter' => 'authGuard']);
-$routes->get('/folder/delete/(:num)', 'FileHandler::delete_folder/$1', ['filter' => 'authGuard']); // Now Archives
+$routes->get('/folder/delete/(:num)', 'FileHandler::delete_folder/$1', ['filter' => 'authGuard']); // Moves to Archive
 
 
 // 7. SETTINGS

@@ -5,7 +5,11 @@ class UserModel extends Model {
     protected $table = 'users';
     protected $primaryKey = 'id';
     
-    // CRITICAL FIX: Added 'department_id' here
+    // Enable automatic timestamps
+    protected $useTimestamps = true;
+    protected $createdField  = 'created_at';
+    protected $updatedField  = 'updated_at';
+
     protected $allowedFields = [
         'username', 
         'email', 
@@ -13,7 +17,6 @@ class UserModel extends Model {
         'role', 
         'department_id',
         'is_archived'
-
     ];
     
     // Helper to check if user is admin or chair
