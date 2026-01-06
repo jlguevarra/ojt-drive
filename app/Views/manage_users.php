@@ -48,13 +48,30 @@
             border-color: #2563eb;
         }
 
-        /* [NEW] Fade out animation for alerts */
+        /* Fade out animation for alerts */
         .fade-out {
             animation: fadeOut 0.5s ease-in-out forwards;
         }
         @keyframes fadeOut {
             from { opacity: 1; }
             to { opacity: 0; display: none; }
+        }
+
+        /* Autofill Fix: Force background color to match theme */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 30px white inset !important;
+            -webkit-text-fill-color: #1f2937 !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+        .dark input:-webkit-autofill,
+        .dark input:-webkit-autofill:hover, 
+        .dark input:-webkit-autofill:focus, 
+        .dark input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 30px #374151 inset !important;
+            -webkit-text-fill-color: white !important;
         }
     </style>
 </head>
@@ -109,6 +126,7 @@
                     </div>
                 <?php endif;?>
             </div>
+
             <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                 <h2 class="text-2xl font-bold text-gray-800 dark:text-white">System Users</h2>
                 
@@ -194,53 +212,42 @@
                 <h3 class="text-xl font-bold text-gray-800 dark:text-white">Add New User</h3>
                 <button onclick="document.getElementById('createModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><i class='bx bx-x text-2xl'></i></button>
             </div>
-            <form action="<?= base_url('admin/createUser') ?>" method="post" class="space-y-4">
-                
+            
+            <form action="<?= base_url('admin/createUser') ?>" method="post" class="space-y-4" id="createForm">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
                     <input type="text" name="username" value="<?= old('username') ?>" required class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-white">
-                    <?php if(session('errors.username')): ?>
-                        <p class="text-red-500 text-xs mt-1"><?= session('errors.username') ?></p>
-                    <?php endif; ?>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
                     <input type="email" name="email" value="<?= old('email') ?>" required class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-white">
-                    <?php if(session('errors.email')): ?>
-                        <p class="text-red-500 text-xs mt-1"><?= session('errors.email') ?></p>
-                    <?php endif; ?>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
                     <input type="password" name="password" required class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-white">
-                    <?php if(session('errors.password')): ?>
-                        <p class="text-red-500 text-xs mt-1"><?= session('errors.password') ?></p>
-                    <?php endif; ?>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
-                    <select name="role" id="create_role" onchange="toggleDepartment('create_role', 'create_dept_container')" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-white">
+                    <select name="role" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-white">
                         <option value="faculty" <?= old('role') == 'faculty' ? 'selected' : '' ?>>Faculty</option>
                         <option value="program_chair" <?= old('role') == 'program_chair' ? 'selected' : '' ?>>Program Chair</option>
-                        <option value="admin" <?= old('role') == 'admin' ? 'selected' : '' ?>>Administrator</option>
                     </select>
                 </div>
 
-                <div id="create_dept_container">
-                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Department <span class="text-red-500">*</span></label>
-                    <select name="department_id" id="create_dept_select" class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-gray-50 dark:bg-gray-700 dark:text-white">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Department</label>
+                    <select name="department_id" required class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-gray-50 dark:bg-gray-700 dark:text-white">
                         <option value="">-- Select Department --</option>
                         <?php if(!empty($departments)): foreach($departments as $dept): ?>
                             <option value="<?= $dept['id'] ?>" <?= old('department_id') == $dept['id'] ? 'selected' : '' ?>><?= $dept['code'] ?> - <?= $dept['name'] ?></option>
                         <?php endforeach; endif; ?>
                     </select>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Required for Faculty and Program Chairs.</p>
                 </div>
 
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition-colors">Create User</button>
+                <button type="submit" id="createBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition-colors opacity-50 cursor-not-allowed" disabled>Create User</button>
             </form>
         </div>
     </div>
@@ -251,45 +258,36 @@
                 <h3 class="text-xl font-bold text-gray-800 dark:text-white">Edit User</h3>
                 <button onclick="document.getElementById('editModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><i class='bx bx-x text-2xl'></i></button>
             </div>
-            <form action="<?= base_url('admin/updateUser') ?>" method="post" class="space-y-4">
+            
+            <form action="<?= base_url('admin/updateUser') ?>" method="post" class="space-y-4" id="editForm">
                 <input type="hidden" name="user_id" id="edit_user_id" value="<?= old('user_id') ?>">
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
                     <input type="text" name="username" id="edit_username" value="<?= old('username') ?>" required class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-white">
-                    <?php if(session('errors.username')): ?>
-                        <p class="text-red-500 text-xs mt-1"><?= session('errors.username') ?></p>
-                    <?php endif; ?>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
                     <input type="email" name="email" id="edit_email" value="<?= old('email') ?>" required class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-white">
-                    <?php if(session('errors.email')): ?>
-                        <p class="text-red-500 text-xs mt-1"><?= session('errors.email') ?></p>
-                    <?php endif; ?>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">New Password (Optional)</label>
-                    <input type="password" name="password" placeholder="Leave blank to keep current" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-white">
-                    <?php if(session('errors.password')): ?>
-                        <p class="text-red-500 text-xs mt-1"><?= session('errors.password') ?></p>
-                    <?php endif; ?>
+                    <input type="password" name="password" id="edit_password" placeholder="Leave blank to keep current" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-white">
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
-                    <select name="role" id="edit_role" onchange="toggleDepartment('edit_role', 'edit_dept_container')" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-white">
+                    <select name="role" id="edit_role" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 mt-1 focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-white">
                         <option value="faculty" <?= old('role') == 'faculty' ? 'selected' : '' ?>>Faculty</option>
                         <option value="program_chair" <?= old('role') == 'program_chair' ? 'selected' : '' ?>>Program Chair</option>
-                        <option value="admin" <?= old('role') == 'admin' ? 'selected' : '' ?>>Administrator</option>
                     </select>
                 </div>
 
-                <div id="edit_dept_container">
-                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Department <span class="text-red-500">*</span></label>
-                    <select name="department_id" id="edit_department_id" class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-gray-50 dark:bg-gray-700 dark:text-white">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Department</label>
+                    <select name="department_id" id="edit_department_id" required class="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-gray-50 dark:bg-gray-700 dark:text-white">
                         <option value="">-- Select Department --</option>
                         <?php if(!empty($departments)): foreach($departments as $dept): ?>
                             <option value="<?= $dept['id'] ?>" <?= old('department_id') == $dept['id'] ? 'selected' : '' ?>><?= $dept['code'] ?> - <?= $dept['name'] ?></option>
@@ -297,7 +295,7 @@
                     </select>
                 </div>
 
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition-colors">Update User</button>
+                <button type="submit" id="editBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition-colors opacity-50 cursor-not-allowed" disabled>Update User</button>
             </form>
         </div>
     </div>
@@ -323,11 +321,10 @@
                 const alerts = document.querySelectorAll('.alert-toast');
                 alerts.forEach(function(alert) {
                     alert.classList.add('fade-out');
-                    setTimeout(() => alert.remove(), 500); // Wait for animation to finish
+                    setTimeout(() => alert.remove(), 500);
                 });
-            }, 5000); // 5 seconds
+            }, 5000);
         });
-        // --------------------------------
 
         // --- SEARCH FUNCTIONALITY ---
         function filterUsers() {
@@ -346,23 +343,77 @@
                 }
             }
         }
-        // --------------------------------
 
-        function toggleDepartment(roleSelectId, deptContainerId) {
-            const role = document.getElementById(roleSelectId).value;
-            const container = document.getElementById(deptContainerId);
-            const select = container.querySelector('select');
+        // --- FORM VALIDATION LOGIC (CREATE FORM) ---
+        // Only checks if required fields are filled
+        function checkCreateForm() {
+            const form = document.getElementById('createForm');
+            const btn = document.getElementById('createBtn');
+            const inputs = form.querySelectorAll('input[required], select[required]');
+            
+            let valid = true;
+            inputs.forEach(input => {
+                if (!input.value.trim()) valid = false;
+            });
 
-            if (role === 'admin') {
-                container.classList.add('hidden'); 
+            if (valid) {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
             } else {
-                container.classList.remove('hidden');
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
             }
         }
 
+        const createForm = document.getElementById('createForm');
+        createForm.addEventListener('input', checkCreateForm);
+        createForm.addEventListener('change', checkCreateForm);
+
+        // --- FORM VALIDATION LOGIC (EDIT FORM) ---
+        // Checks if valid AND if changes were made
+        let originalData = {};
+
+        function checkEditForm() {
+            const btn = document.getElementById('editBtn');
+            
+            const currentUsername = document.getElementById('edit_username').value.trim();
+            const currentEmail = document.getElementById('edit_email').value.trim();
+            const currentRole = document.getElementById('edit_role').value;
+            const currentDept = document.getElementById('edit_department_id').value;
+            const password = document.getElementById('edit_password').value;
+
+            // 1. Validity Check
+            let isValid = true;
+            if(!currentUsername) isValid = false;
+            if(!currentEmail) isValid = false;
+            if(!currentDept) isValid = false;
+
+            // 2. Change Detection
+            let hasChanges = false;
+            if(currentUsername !== originalData.username) hasChanges = true;
+            if(currentEmail !== originalData.email) hasChanges = true;
+            if(currentRole !== originalData.role) hasChanges = true;
+            if(currentDept !== originalData.department_id) hasChanges = true;
+            if(password.length > 0) hasChanges = true;
+
+            if (isValid && hasChanges) {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        const editForm = document.getElementById('editForm');
+        editForm.addEventListener('input', checkEditForm);
+        editForm.addEventListener('change', checkEditForm);
+
         function openCreateModal() { 
             document.getElementById('createModal').classList.remove('hidden');
-            toggleDepartment('create_role', 'create_dept_container'); 
+            // Reset form
+            document.getElementById('createForm').reset();
+            checkCreateForm(); // Re-check validation state
         }
         
         function openEditModal(user) {
@@ -371,9 +422,18 @@
             document.getElementById('edit_email').value = user.email;
             document.getElementById('edit_role').value = user.role;
             document.getElementById('edit_department_id').value = user.department_id || "";
+            document.getElementById('edit_password').value = ""; // Reset password field
+
+            // Store original values for change detection
+            originalData = {
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                department_id: user.department_id || ""
+            };
             
-            toggleDepartment('edit_role', 'edit_dept_container');
             document.getElementById('editModal').classList.remove('hidden');
+            checkEditForm(); // Re-check validation state
         }
 
         function openLogoutModal() {
@@ -385,10 +445,10 @@
                 const oldUserId = "<?= old('user_id') ?>";
                 if (oldUserId) {
                     document.getElementById('editModal').classList.remove('hidden');
-                    toggleDepartment('edit_role', 'edit_dept_container');
+                    checkEditForm();
                 } else {
                     document.getElementById('createModal').classList.remove('hidden');
-                    toggleDepartment('create_role', 'create_dept_container');
+                    checkCreateForm();
                 }
             <?php endif; ?>
         });
