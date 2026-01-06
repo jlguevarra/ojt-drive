@@ -14,11 +14,18 @@ class Settings extends BaseController
         $session = session();
         $model = new UserModel();
         $id = $session->get('id');
+        $role = $session->get('role'); // Get the current user's role
 
         // 1. Validation Rules
         $rules = [
             'username' => 'required|min_length[3]',
         ];
+
+        // Allow Admin to update email
+        if ($role == 'admin') {
+            // Required, valid email, and unique in users table (ignoring current user's ID)
+            $rules['email'] = "required|valid_email|is_unique[users.email,id,$id]";
+        }
 
         // Only validate password if the user typed one in
         if($this->request->getPost('password') != ''){
@@ -35,6 +42,11 @@ class Settings extends BaseController
             'username' => $this->request->getPost('username'),
         ];
 
+        // Add email to data if user is admin
+        if ($role == 'admin') {
+            $data['email'] = $this->request->getPost('email');
+        }
+
         // 3. Handle Password Change
         if($this->request->getPost('password') != ''){
             $data['password'] = password_hash($this->request->getPost('password'), PASSWORD_DEFAULT);
@@ -43,8 +55,13 @@ class Settings extends BaseController
         // 4. Update Database
         $model->update($id, $data);
 
-        // 5. Update Session Data (so the name changes instantly in the header)
+        // 5. Update Session Data
         $session->set('username', $data['username']);
+        
+        // Update session email if changed by admin
+        if ($role == 'admin') {
+            $session->set('email', $data['email']);
+        }
 
         return redirect()->back()->with('success', 'Profile updated successfully.');
     }

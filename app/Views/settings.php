@@ -21,7 +21,8 @@
 
     <?php 
         $role = session()->get('role');
-        $isAdmin = ($role == 'admin' || $role == 'program_chair');
+        $isAdmin = ($role == 'admin' || $role == 'program_chair'); // Check for admin/chair privileges generally
+        $canEditEmail = ($role == 'admin'); // Specific flag for email editing (Admins only)
         $themeColor = $isAdmin ? 'blue' : 'green';
     ?>
 
@@ -85,8 +86,17 @@
                         
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
-                            <input type="text" value="<?= session()->get('email') ?>" disabled class="block w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-sm">
-                            <p class="text-xs text-gray-400 mt-1">Email cannot be changed. Contact admin for help.</p>
+                            <input type="text" name="email" value="<?= session()->get('email') ?>" 
+                                <?= $canEditEmail ? '' : 'disabled' ?> 
+                                class="block w-full px-3 py-2 border rounded-lg text-sm transition-colors 
+                                <?= $canEditEmail 
+                                    ? "border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-{$themeColor}-500 focus:border-{$themeColor}-500" 
+                                    : "border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400" 
+                                ?>">
+                            
+                            <?php if(!$canEditEmail): ?>
+                                <p class="text-xs text-gray-400 mt-1">Email cannot be changed. Contact admin for help.</p>
+                            <?php endif; ?>
                         </div>
 
                         <div>
