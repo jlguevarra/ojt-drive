@@ -47,6 +47,15 @@
             color: white;
             border-color: #2563eb;
         }
+
+        /* [NEW] Fade out animation for alerts */
+        .fade-out {
+            animation: fadeOut 0.5s ease-in-out forwards;
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; display: none; }
+        }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 h-screen flex overflow-hidden transition-colors duration-300">
@@ -71,29 +80,51 @@
                 <div class="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
                     <?= substr(session()->get('username'), 0, 1) ?>
                 </div>
-                <a href="<?= base_url('/logout') ?>" class="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors">
+                <button onclick="openLogoutModal()" class="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors">
                     <i class='bx bx-log-out text-2xl'></i>
-                </a>
+                </button>
             </div>
         </header>
 
         <main class="flex-1 overflow-y-auto p-8">
-            <?php if(session()->getFlashdata('success')):?>
-                <div class="bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-300 px-4 py-3 rounded relative mb-4 flex items-center">
-                    <i class='bx bx-check-circle mr-2 text-xl'></i><?= session()->getFlashdata('success') ?>
-                </div>
-            <?php endif;?>
-            <?php if(session()->getFlashdata('error')):?>
-                <div class="bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded relative mb-4 flex items-center">
-                    <i class='bx bx-error-circle mr-2 text-xl'></i><?= session()->getFlashdata('error') ?>
-                </div>
-            <?php endif;?>
-
-            <div class="flex justify-between items-center mb-6">
+            
+            <div id="alert-container">
+                <?php if(session()->getFlashdata('success')):?>
+                    <div class="alert-toast bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-300 px-4 py-3 rounded relative mb-4 flex justify-between items-center transition-all duration-500" role="alert">
+                        <div class="flex items-center">
+                            <i class='bx bxs-check-circle mr-2 text-xl'></i>
+                            <span><?= session()->getFlashdata('success') ?></span>
+                        </div>
+                        <button onclick="this.parentElement.remove()" class="text-green-700 dark:text-green-300 hover:text-green-900 dark:hover:text-green-100 font-bold ml-4 text-xl leading-none focus:outline-none">&times;</button>
+                    </div>
+                <?php endif;?>
+                
+                <?php if(session()->getFlashdata('error')):?>
+                    <div class="alert-toast bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded relative mb-4 flex justify-between items-center transition-all duration-500" role="alert">
+                        <div class="flex items-center">
+                            <i class='bx bxs-error-circle mr-2 text-xl'></i>
+                            <span><?= session()->getFlashdata('error') ?></span>
+                        </div>
+                        <button onclick="this.parentElement.remove()" class="text-red-700 dark:text-red-300 hover:text-red-900 dark:hover:text-red-100 font-bold ml-4 text-xl leading-none focus:outline-none">&times;</button>
+                    </div>
+                <?php endif;?>
+            </div>
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                 <h2 class="text-2xl font-bold text-gray-800 dark:text-white">System Users</h2>
-                <button onclick="openCreateModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center shadow-md transition-colors">
-                    <i class='bx bx-plus mr-2'></i> Add New User
-                </button>
+                
+                <div class="flex flex-1 justify-end items-center gap-3 w-full md:w-auto">
+                    <div class="relative max-w-sm w-full">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class='bx bx-search text-gray-400 text-xl'></i>
+                        </span>
+                        <input type="text" id="userSearch" onkeyup="filterUsers()" placeholder="Search name or email..." 
+                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-colors shadow-sm">
+                    </div>
+
+                    <button onclick="openCreateModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center shadow-md transition-colors whitespace-nowrap">
+                        <i class='bx bx-user-plus mr-2 text-xl'></i> Add User
+                    </button>
+                </div>
             </div>
 
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors duration-300">
@@ -108,16 +139,16 @@
                                 <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 dark:text-gray-300 uppercase">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700" id="userTableBody">
                             <?php if(!empty($users)): foreach($users as $user): ?>
-                            <tr class="hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors">
+                            <tr class="hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors user-row">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
-                                        <div class="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 flex items-center justify-center font-bold">
+                                        <div class="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 flex items-center justify-center font-bold flex-shrink-0">
                                             <?= substr($user['username'], 0, 1) ?>
                                         </div>
                                         <div class="ml-4">
-                                            <div class="text-sm font-medium text-gray-900 dark:text-white"><?= esc($user['username']) ?></div>
+                                            <div class="text-sm font-medium text-gray-900 dark:text-white user-name"><?= esc($user['username']) ?></div>
                                             <div class="text-xs text-gray-400 dark:text-gray-500">ID: #<?= $user['id'] ?></div>
                                         </div>
                                     </div>
@@ -136,7 +167,7 @@
                                         <span class="text-gray-400 text-xs">-</span>
                                     <?php endif; ?>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"><?= esc($user['email']) ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 user-email"><?= esc($user['email']) ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                                     <button onclick='openEditModal(<?= json_encode($user) ?>)' class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 bg-blue-50 dark:bg-gray-700 p-2 rounded hover:bg-blue-100 dark:hover:bg-gray-600 transition-colors"><i class='bx bx-edit'></i></button>
                                     <a href="<?= base_url('admin/deleteUser/'.$user['id']) ?>" onclick="return confirm('Delete this user?')" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 bg-red-50 dark:bg-gray-700 p-2 rounded hover:bg-red-100 dark:hover:bg-gray-600 transition-colors"><i class='bx bx-trash'></i></a>
@@ -271,7 +302,52 @@
         </div>
     </div>
 
+    <div id="logoutModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 dark:bg-opacity-80 hidden z-50 flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl w-80 transform scale-100 transition-transform text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                <i class='bx bx-log-out text-2xl text-red-600'></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-2">Confirm Logout</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Are you sure you want to sign out?</p>
+            <div class="flex justify-center space-x-3">
+                <button onclick="document.getElementById('logoutModal').classList.add('hidden')" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 text-sm font-medium transition-colors">Cancel</button>
+                <a href="<?= base_url('/logout') ?>" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium shadow-md shadow-red-500/30 transition-colors">Logout</a>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // --- ALERT AUTO DISMISS SCRIPT ---
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.alert-toast');
+                alerts.forEach(function(alert) {
+                    alert.classList.add('fade-out');
+                    setTimeout(() => alert.remove(), 500); // Wait for animation to finish
+                });
+            }, 5000); // 5 seconds
+        });
+        // --------------------------------
+
+        // --- SEARCH FUNCTIONALITY ---
+        function filterUsers() {
+            let input = document.getElementById('userSearch');
+            let filter = input.value.toLowerCase();
+            let rows = document.getElementsByClassName('user-row');
+
+            for (let i = 0; i < rows.length; i++) {
+                let name = rows[i].querySelector('.user-name').textContent.toLowerCase();
+                let email = rows[i].querySelector('.user-email').textContent.toLowerCase();
+                
+                if (name.indexOf(filter) > -1 || email.indexOf(filter) > -1) {
+                    rows[i].style.display = "";
+                } else {
+                    rows[i].style.display = "none";
+                }
+            }
+        }
+        // --------------------------------
+
         function toggleDepartment(roleSelectId, deptContainerId) {
             const role = document.getElementById(roleSelectId).value;
             const container = document.getElementById(deptContainerId);
@@ -298,6 +374,10 @@
             
             toggleDepartment('edit_role', 'edit_dept_container');
             document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function openLogoutModal() {
+            document.getElementById('logoutModal').classList.remove('hidden');
         }
 
         document.addEventListener('DOMContentLoaded', function() {

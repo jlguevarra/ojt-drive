@@ -68,7 +68,19 @@
     <div class="flex-1 flex flex-col overflow-hidden">
         
         <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-16 flex items-center justify-between px-6 pl-14 md:pl-6 shadow-sm z-10 transition-colors duration-300">
-            <h1 class="text-xl font-bold text-gray-800 dark:text-white">Archived Items</h1>
+            <div class="flex items-center flex-1">
+                <h1 class="text-xl font-bold text-gray-800 dark:text-white mr-8 whitespace-nowrap">Archived Items</h1>
+                
+                <div class="relative max-w-md w-full hidden md:block">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class='bx bx-search text-gray-400 text-xl'></i>
+                    </span>
+                    <input type="text" id="archiveSearch" onkeyup="filterArchive()" 
+                           placeholder="Search current tab..." 
+                           class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm transition-colors">
+                </div>
+            </div>
+
             <div class="flex items-center space-x-4">
                 <button onclick="toggleTheme()" class="text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-yellow-400 transition-colors focus:outline-none">
                     <i class='bx bxs-sun text-2xl dark:hidden'></i>
@@ -94,7 +106,7 @@
             <?php endif;?>
 
             <div class="border-b border-gray-200 dark:border-gray-700 mb-6">
-                <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                <nav class="-mb-px flex space-x-8 overflow-x-auto" aria-label="Tabs">
                     <button onclick="switchTab('users')" id="btn-users" class="tab-btn active whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
                         <i class='bx bx-user mr-2'></i> Archived Users
                     </button>
@@ -114,19 +126,18 @@
                 <?php if(!empty($users)): ?>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                         <?php foreach($users as $user): ?>
-                        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
+                        <div class="searchable-item bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
                             <div class="flex items-center space-x-3">
                                 <div class="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-300 font-bold">
                                     <?= substr($user['username'], 0, 1) ?>
                                 </div>
                                 <div>
-                                    <span class="text-sm font-medium text-gray-600 dark:text-gray-200 block"><?= esc($user['username']) ?></span>
+                                    <span class="text-sm font-medium text-gray-600 dark:text-gray-200 block search-text"><?= esc($user['username']) ?></span>
                                     <span class="text-xs text-gray-400 dark:text-gray-500 block"><?= esc($user['role']) ?></span>
                                 </div>
                             </div>
                             <div class="flex space-x-2">
                                 <a href="<?= base_url('admin/archive/restore/user/'.$user['id']) ?>" class="text-green-500 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 bg-green-50 dark:bg-green-900/20 p-2 rounded-full" title="Restore"><i class='bx bx-revision'></i></a>
-                                <a href="<?= base_url('admin/archive/delete/user/'.$user['id']) ?>" onclick="return confirm('Permanently delete this user?')" class="text-red-400 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 bg-red-50 dark:bg-red-900/20 p-2 rounded-full" title="Delete Forever"><i class='bx bx-trash'></i></a>
                             </div>
                         </div>
                         <?php endforeach; ?>
@@ -143,19 +154,18 @@
                 <?php if(!empty($departments)): ?>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                         <?php foreach($departments as $dept): ?>
-                        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
+                        <div class="searchable-item bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
                             <div class="flex items-center space-x-3">
                                 <div class="h-10 w-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400 font-bold">
                                     <i class='bx bxs-building-house'></i>
                                 </div>
                                 <div>
-                                    <span class="text-sm font-medium text-gray-600 dark:text-gray-200 block"><?= esc($dept['code']) ?></span>
-                                    <span class="text-xs text-gray-400 dark:text-gray-500 block truncate w-32"><?= esc($dept['name']) ?></span>
+                                    <span class="text-sm font-medium text-gray-600 dark:text-gray-200 block search-text"><?= esc($dept['code']) ?></span>
+                                    <span class="text-xs text-gray-400 dark:text-gray-500 block truncate w-32 search-text"><?= esc($dept['name']) ?></span>
                                 </div>
                             </div>
                             <div class="flex space-x-2">
                                 <a href="<?= base_url('admin/archive/restore/department/'.$dept['id']) ?>" class="text-green-500 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 bg-green-50 dark:bg-green-900/20 p-2 rounded-full" title="Restore"><i class='bx bx-revision'></i></a>
-                                <a href="<?= base_url('admin/archive/delete/department/'.$dept['id']) ?>" onclick="return confirm('Permanently delete this department?')" class="text-red-400 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 bg-red-50 dark:bg-red-900/20 p-2 rounded-full" title="Delete Forever"><i class='bx bx-trash'></i></a>
                             </div>
                         </div>
                         <?php endforeach; ?>
@@ -172,14 +182,13 @@
                 <?php if(!empty($folders)): ?>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
                         <?php foreach($folders as $folder): ?>
-                        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
+                        <div class="searchable-item bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
                             <div class="flex items-center space-x-3">
                                 <i class='bx bxs-folder text-yellow-400 text-3xl'></i>
-                                <span class="text-sm font-medium text-gray-600 dark:text-gray-200"><?= esc($folder['name']) ?></span>
+                                <span class="text-sm font-medium text-gray-600 dark:text-gray-200 search-text"><?= esc($folder['name']) ?></span>
                             </div>
                             <div class="flex space-x-2">
                                 <a href="<?= base_url('admin/archive/restore/folder/'.$folder['id']) ?>" class="text-green-500 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 bg-green-50 dark:bg-green-900/20 p-2 rounded-full" title="Restore"><i class='bx bx-revision'></i></a>
-                                <a href="<?= base_url('admin/archive/delete/folder/'.$folder['id']) ?>" onclick="return confirm('Permanently delete this folder?')" class="text-red-400 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 bg-red-50 dark:bg-red-900/20 p-2 rounded-full" title="Delete Forever"><i class='bx bx-trash'></i></a>
                             </div>
                         </div>
                         <?php endforeach; ?>
@@ -196,14 +205,13 @@
                 <?php if(!empty($files)): ?>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <?php foreach($files as $file): ?>
-                        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
+                        <div class="searchable-item bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
                             <div class="flex items-center space-x-3 overflow-hidden">
                                 <i class='bx bxs-file text-blue-400 text-2xl'></i>
-                                <span class="text-sm font-medium text-gray-600 dark:text-gray-200 truncate"><?= esc($file['filename']) ?></span>
+                                <span class="text-sm font-medium text-gray-600 dark:text-gray-200 truncate search-text"><?= esc($file['filename']) ?></span>
                             </div>
                             <div class="flex space-x-2 shrink-0">
                                 <a href="<?= base_url('admin/archive/restore/file/'.$file['id']) ?>" class="text-green-500 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 bg-green-50 dark:bg-green-900/20 p-2 rounded-full" title="Restore"><i class='bx bx-revision'></i></a>
-                                <a href="<?= base_url('admin/archive/delete/file/'.$file['id']) ?>" onclick="return confirm('Permanently delete this file?')" class="text-red-400 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 bg-red-50 dark:bg-red-900/20 p-2 rounded-full" title="Delete Forever"><i class='bx bx-trash'></i></a>
                             </div>
                         </div>
                         <?php endforeach; ?>
@@ -248,6 +256,41 @@
             activeBtn.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
             
             localStorage.setItem('activeArchiveTab', tabName);
+            
+            // Re-apply filter on tab switch
+            filterArchive();
+        }
+
+        // SEARCH FUNCTIONALITY
+        function filterArchive() {
+            let input = document.getElementById('archiveSearch').value.toLowerCase();
+            
+            // Determine active tab to filter only visible items
+            let activeTabName = localStorage.getItem('activeArchiveTab') || 'users';
+            let activeTab = document.getElementById('tab-' + activeTabName);
+            
+            if(activeTab) {
+                let items = activeTab.getElementsByClassName('searchable-item');
+                
+                for (let i = 0; i < items.length; i++) {
+                    // Get text from searchable elements (e.g., name, email, code)
+                    let textElements = items[i].getElementsByClassName('search-text');
+                    let match = false;
+                    
+                    for(let j=0; j < textElements.length; j++) {
+                        if (textElements[j].innerText.toLowerCase().indexOf(input) > -1) {
+                            match = true;
+                            break;
+                        }
+                    }
+
+                    if (match) {
+                        items[i].style.display = "";
+                    } else {
+                        items[i].style.display = "none";
+                    }
+                }
+            }
         }
 
         // Initialize Tab on Load

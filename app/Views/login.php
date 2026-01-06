@@ -102,7 +102,10 @@
             </form>
 
             <div class="mt-8 text-center border-t border-gray-100 dark:border-gray-700 pt-6">
-                <p class="text-sm text-gray-500 dark:text-gray-400">Need an account? <a href="<?= base_url('/register') ?>" class="text-blue-600 dark:text-blue-400 font-semibold hover:underline">Register here</a></p>
+                <p class="text-xs text-gray-400 dark:text-gray-500">
+                    Don't have an account? <br>
+                    <span class="text-gray-600 dark:text-gray-300 font-medium">Please contact the Administrator.</span>
+                </p>
             </div>
         </div>
     </div>
