@@ -14,16 +14,19 @@ class Dashboard extends BaseController {
         
         $db = \Config\Database::connect();
         $folderModel = new FolderModel();
+        $fileModel = new FileModel(); // Instantiate FileModel
         $userModel = new UserModel();
         
         $currentUser = $userModel->find($session->get('id'));
         $userDeptId = $currentUser['department_id'] ?? null;
 
-        // --- A. FOLDERS ---
         $currentFolderId = $this->request->getGet('folder_id');
         $currentFolderId = !empty($currentFolderId) ? $currentFolderId : null;
+        
+        $search = $this->request->getGet('q'); // Get search term
+        $filterDept = $this->request->getGet('dept');
 
-        // [FIXED] Ambiguous column error by adding 'folders.' prefix
+        // --- A. FOLDERS ---
         $folderBuilder = $folderModel->where('parent_id', $currentFolderId)
                                      ->where('folders.is_archived', 0); 
 
@@ -34,12 +37,20 @@ class Dashboard extends BaseController {
             $folderBuilder->where('folders.department_id', $userDeptId);
         }
 
-        $filterDept = $this->request->getGet('dept');
         if($role === 'admin' && !empty($filterDept)) {
             $folderBuilder->where('folders.department_id', $filterDept);
         }
 
-        $data['folders'] = $folderBuilder->findAll();
+        // Apply search to folders
+        if(!empty($search)){ 
+            $folderBuilder->groupStart()
+                          ->like('folders.name', $search)
+                          ->groupEnd(); 
+        }
+
+        // Paginate Folders (10 per page, group 'folders')
+        $data['folders'] = $folderBuilder->paginate(10, 'folders');
+        $data['pager_folders'] = $folderModel->pager;
 
         // Breadcrumbs
         $breadcrumbs = [];
@@ -57,13 +68,12 @@ class Dashboard extends BaseController {
         $data['current_folder_id'] = $currentFolderId;
 
         // --- B. FILES ---
-        $fileBuilder = $db->table('files');
+        // Use FileModel instead of $db->table for pagination compatibility
+        $fileBuilder = $fileModel->where('files.is_archived', 0);
+        
         $fileBuilder->select('files.*, departments.code as dept_code');
         $fileBuilder->join('departments', 'departments.id = files.department_id', 'left');
         
-        // [FIXED] Added 'files.' prefix
-        $fileBuilder->where('files.is_archived', 0); 
-
         if($currentFolderId){
             $fileBuilder->where('files.folder_id', $currentFolderId);
         } else {
@@ -82,14 +92,20 @@ class Dashboard extends BaseController {
             $fileBuilder->where('files.department_id', $filterDept);
         }
 
-        $search = $this->request->getGet('q');
-        if(!empty($search)){ $fileBuilder->like('filename', $search); }
+        // Apply search to files
+        if(!empty($search)){ 
+            $fileBuilder->groupStart()
+                        ->like('files.filename', $search)
+                        ->groupEnd(); 
+        }
 
-        $data['files'] = $fileBuilder->orderBy('files.created_at', 'DESC')->get()->getResultArray();
+        // Paginate Files (10 per page, group 'files')
+        $data['files'] = $fileBuilder->orderBy('files.created_at', 'DESC')->paginate(10, 'files');
+        $data['pager_files'] = $fileModel->pager;
+        
         $data['search_term'] = $search;
         
         if($role === 'admin') {
-            // [FIXED] Filter archived departments in Dashboard dropdown too
             $data['departments'] = $db->table('departments')
                                       ->where('is_archived', 0)
                                       ->get()->getResultArray();
@@ -104,6 +120,7 @@ class Dashboard extends BaseController {
         $db = \Config\Database::connect();
         $userModel = new \App\Models\UserModel();
         $folderModel = new \App\Models\FolderModel(); 
+        $fileModel = new \App\Models\FileModel();
 
         $user = $userModel->find($session->get('id'));
         $userDeptId = $user['department_id'] ?? null;
@@ -114,12 +131,19 @@ class Dashboard extends BaseController {
 
         $currentFolderId = $this->request->getGet('folder_id');
         $currentFolderId = !empty($currentFolderId) ? $currentFolderId : null;
+        $search = $this->request->getGet('q');
 
-        $data['folders'] = $folderModel->where('parent_id', $currentFolderId)
-                                       ->where('department_id', $userDeptId)
-                                       ->where('folders.is_archived', 0) 
-                                       ->findAll();
+        // Folders
+        $folderBuilder = $folderModel->where('parent_id', $currentFolderId)
+                                     ->where('department_id', $userDeptId)
+                                     ->where('folders.is_archived', 0);
+        
+        if(!empty($search)){ $folderBuilder->like('name', $search); }
 
+        $data['folders'] = $folderBuilder->paginate(10, 'folders');
+        $data['pager_folders'] = $folderModel->pager;
+
+        // Breadcrumbs
         $breadcrumbs = [];
         if ($currentFolderId) {
             $tempId = $currentFolderId;
@@ -134,20 +158,21 @@ class Dashboard extends BaseController {
         $data['breadcrumbs'] = $breadcrumbs;
         $data['current_folder_id'] = $currentFolderId;
 
-        $builder = $db->table('files');
-        $builder->where('department_id', $userDeptId);
-        $builder->where('files.is_archived', 0); 
+        // Files
+        $fileBuilder = $fileModel->where('department_id', $userDeptId)
+                                 ->where('files.is_archived', 0); 
 
         if($currentFolderId){
-            $builder->where('folder_id', $currentFolderId);
+            $fileBuilder->where('folder_id', $currentFolderId);
         } else {
-            $builder->where('folder_id', NULL);
+            $fileBuilder->where('folder_id', NULL);
         }
 
-        $search = $this->request->getGet('q');
-        if(!empty($search)){ $builder->like('filename', $search); }
+        if(!empty($search)){ $fileBuilder->like('filename', $search); }
 
-        $data['files'] = $builder->orderBy('created_at', 'DESC')->get()->getResultArray();
+        $data['files'] = $fileBuilder->orderBy('created_at', 'DESC')->paginate(10, 'files');
+        $data['pager_files'] = $fileModel->pager;
+        
         $data['search_term'] = $search;
         
         return view('faculty_dashboard', $data);
@@ -160,21 +185,17 @@ class Dashboard extends BaseController {
 
         $db = \Config\Database::connect();
         $myId = $session->get('id');
-        $userModel = new UserModel(); // Use Model for pagination capabilities
+        $userModel = new UserModel();
         
-        // 1. Fetch Paginated Users
-        // Note: paginate(10) means 10 users per page.
         $data['users'] = $userModel->select('users.*, departments.code as dept_code')
                                    ->join('departments', 'departments.id = users.department_id', 'left')
                                    ->where('users.id !=', $myId)
-                                   ->where('users.is_archived', 0) // Explicit prefix
+                                   ->where('users.is_archived', 0)
                                    ->orderBy('users.created_at', 'DESC')
                                    ->paginate(5); 
         
-        // 2. Pass Pager to View
         $data['pager'] = $userModel->pager;
 
-        // 3. Fetch Departments for Dropdown (Keep as is)
         $data['departments'] = $db->table('departments')
                                   ->where('is_archived', 0)
                                   ->get()->getResultArray();
@@ -267,9 +288,7 @@ class Dashboard extends BaseController {
         
         $model = new \App\Models\LogModel();
         
-        // [CHANGED] Use paginate() instead of findAll()
-        // showing 15 logs per page
-        $data['logs'] = $model->orderBy('created_at', 'DESC')->paginate(5); 
+        $data['logs'] = $model->orderBy('created_at', 'DESC')->paginate(15); 
         $data['pager'] = $model->pager;
         
         return view('activity_logs', $data);
