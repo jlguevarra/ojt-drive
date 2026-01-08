@@ -59,6 +59,15 @@
             color: #60a5fa; /* blue-400 */
             border-color: #60a5fa;
         }
+
+        /* Fade Out Animation */
+        .fade-out {
+            animation: fadeOut 0.5s ease-in-out forwards;
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; display: none; }
+        }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 h-screen flex overflow-hidden transition-colors duration-300">
@@ -71,13 +80,17 @@
             <div class="flex items-center flex-1">
                 <h1 class="text-xl font-bold text-gray-800 dark:text-white mr-8 whitespace-nowrap">Archived Items</h1>
                 
-                <div class="relative max-w-md w-full hidden md:block">
+                <div class="relative max-w-md w-full hidden md:block group">
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <i class='bx bx-search text-gray-400 text-xl'></i>
                     </span>
                     <input type="text" id="archiveSearch" onkeyup="filterArchive()" 
                            placeholder="Search current tab..." 
-                           class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm transition-colors">
+                           class="block w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm transition-colors">
+                    
+                    <button type="button" id="clearSearchBtn" onclick="clearSearch()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-red-500 cursor-pointer hidden transition-colors">
+                        <i class='bx bx-x-circle text-xl'></i>
+                    </button>
                 </div>
             </div>
 
@@ -101,9 +114,28 @@
         </header>
 
         <main class="flex-1 overflow-y-auto p-4 pb-6">
-            <?php if(session()->getFlashdata('success')):?>
-                <div class="bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-300 px-4 py-3 rounded relative mb-6"><?= session()->getFlashdata('success') ?></div>
-            <?php endif;?>
+            
+            <div id="alert-container">
+                <?php if(session()->getFlashdata('success')):?>
+                    <div class="alert-toast bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-300 px-4 py-3 rounded relative mb-6 flex justify-between items-center transition-all duration-500 shadow-sm">
+                        <div class="flex items-center">
+                            <i class='bx bxs-check-circle mr-2 text-xl'></i>
+                            <span><?= session()->getFlashdata('success') ?></span>
+                        </div>
+                        <button onclick="this.parentElement.remove()" class="text-green-700 dark:text-green-300 hover:text-green-900 dark:hover:text-green-100 font-bold ml-4 text-xl leading-none focus:outline-none">&times;</button>
+                    </div>
+                <?php endif;?>
+                
+                <?php if(session()->getFlashdata('error')):?>
+                    <div class="alert-toast bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded relative mb-6 flex justify-between items-center transition-all duration-500 shadow-sm">
+                        <div class="flex items-center">
+                            <i class='bx bxs-error-circle mr-2 text-xl'></i>
+                            <span><?= session()->getFlashdata('error') ?></span>
+                        </div>
+                        <button onclick="this.parentElement.remove()" class="text-red-700 dark:text-red-300 hover:text-red-900 dark:hover:text-red-100 font-bold ml-4 text-xl leading-none focus:outline-none">&times;</button>
+                    </div>
+                <?php endif;?>
+            </div>
 
             <div class="border-b border-gray-200 dark:border-gray-700 mb-6">
                 <nav class="-mb-px flex space-x-8 overflow-x-auto" aria-label="Tabs">
@@ -261,40 +293,42 @@
     </div>
 
     <script>
-        // TAB SWITCHING LOGIC (Updated to handle Footer Pagination)
+        // TAB SWITCHING LOGIC
         function switchTab(tabName) {
-            // 1. Hide all tab contents
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             
-            // 2. Reset all tab buttons
             document.querySelectorAll('.tab-btn').forEach(el => {
                 el.classList.remove('active', 'border-blue-500', 'text-blue-600', 'dark:text-blue-400', 'dark:border-blue-400');
                 el.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
             });
 
-            // 3. Show selected tab content
             document.getElementById('tab-' + tabName).classList.remove('hidden');
             
-            // 4. Highlight selected button
             const activeBtn = document.getElementById('btn-' + tabName);
             activeBtn.classList.add('active', 'border-blue-500', 'text-blue-600', 'dark:text-blue-400', 'dark:border-blue-400');
             activeBtn.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
             
-            // 5. FOOTER LOGIC: Show corresponding pagination
-            document.querySelectorAll('.tab-pager').forEach(el => el.classList.add('hidden')); // Hide all pagers
+            document.querySelectorAll('.tab-pager').forEach(el => el.classList.add('hidden')); 
             const activePager = document.getElementById('pager-' + tabName);
-            if(activePager) activePager.classList.remove('hidden'); // Show active pager
+            if(activePager) activePager.classList.remove('hidden'); 
 
-            // Save state
             localStorage.setItem('activeArchiveTab', tabName);
-            
-            // Re-apply filter on tab switch
             filterArchive();
         }
 
-        // SEARCH FUNCTIONALITY
+        // SEARCH FUNCTIONALITY WITH CLEAR BUTTON
         function filterArchive() {
-            let input = document.getElementById('archiveSearch').value.toLowerCase();
+            let input = document.getElementById('archiveSearch');
+            let clearBtn = document.getElementById('clearSearchBtn');
+            let filterValue = input.value.toLowerCase();
+            
+            // Toggle X button visibility
+            if (input.value.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+
             let activeTabName = localStorage.getItem('activeArchiveTab') || 'users';
             let activeTab = document.getElementById('tab-' + activeTabName);
             
@@ -304,7 +338,7 @@
                     let textElements = items[i].getElementsByClassName('search-text');
                     let match = false;
                     for(let j=0; j < textElements.length; j++) {
-                        if (textElements[j].innerText.toLowerCase().indexOf(input) > -1) {
+                        if (textElements[j].innerText.toLowerCase().indexOf(filterValue) > -1) {
                             match = true; break;
                         }
                     }
@@ -313,10 +347,27 @@
             }
         }
 
-        // Initialize Tab on Load
+        // Clear Search Function
+        function clearSearch() {
+            let input = document.getElementById('archiveSearch');
+            input.value = '';
+            filterArchive(); // Reset filter
+            input.focus(); // Keep focus
+        }
+
+        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             const savedTab = localStorage.getItem('activeArchiveTab') || 'users';
             switchTab(savedTab);
+
+            // Auto-fade alerts
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.alert-toast');
+                alerts.forEach(function(alert) {
+                    alert.classList.add('fade-out');
+                    setTimeout(() => alert.remove(), 500);
+                });
+            }, 5000);
         });
 
         function openLogoutModal() { document.getElementById('logoutModal').classList.remove('hidden'); }
