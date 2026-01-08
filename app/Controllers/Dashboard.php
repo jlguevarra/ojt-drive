@@ -201,7 +201,7 @@ class Dashboard extends BaseController {
                                    ->where('users.id !=', $myId)
                                    ->where('users.is_archived', 0)
                                    ->orderBy('users.created_at', 'DESC')
-                                   ->paginate(5); 
+                                   ->paginate(4); 
         
         $data['pager'] = $userModel->pager;
 

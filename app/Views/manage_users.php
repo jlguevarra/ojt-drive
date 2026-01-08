@@ -103,7 +103,7 @@
             </div>
         </header>
 
-        <main class="flex-1 overflow-y-auto p-8">
+        <main class="flex-1 overflow-y-auto p-8 pb-6">
             
             <div id="alert-container">
                 <?php if(session()->getFlashdata('success')):?>
@@ -199,11 +199,13 @@
                 </div>
             </div>
 
-            <div class="mt-6 flex justify-center">
+        </main>
+
+        <div class="bg-white dark:bg-gray-900 py-2 px-4 shrink-0 z-20">
+            <div class="flex justify-center">
                 <?= $pager->links() ?>
             </div>
-
-        </main>
+        </div>
     </div>
 
     <div id="createModal" class="fixed inset-0 bg-gray-900 dark:bg-gray-900 bg-opacity-50 dark:bg-opacity-80 hidden z-50 flex items-center justify-center backdrop-blur-sm">
