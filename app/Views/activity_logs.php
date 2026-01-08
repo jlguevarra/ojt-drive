@@ -134,7 +134,7 @@
             </div>
         </header>
 
-        <main class="flex-1 overflow-y-auto p-8" data-date="<?= date('Y-m-d H:i:s') ?>">
+        <main class="flex-1 overflow-y-auto p-8 pb-6" data-date="<?= date('Y-m-d H:i:s') ?>">
             
             <div class="flex justify-between items-center mb-6">
                 <div>
@@ -214,11 +214,13 @@
                 </div>
             </div>
 
-            <div class="mt-6 flex justify-center">
+        </main>
+
+        <div class="bg-white dark:bg-gray-900 py-2 px-4 shrink-0 z-20 print:hidden">
+            <div class="flex justify-center">
                 <?= $pager->links() ?>
             </div>
-
-        </main>
+        </div>
     </div>
 
     <div id="logoutModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 flex items-center justify-center backdrop-blur-sm">

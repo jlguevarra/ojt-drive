@@ -100,7 +100,7 @@
             </div>
         </header>
 
-        <main class="flex-1 overflow-y-auto p-6">
+        <main class="flex-1 overflow-y-auto p-4 pb-6">
             <?php if(session()->getFlashdata('success')):?>
                 <div class="bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-300 px-4 py-3 rounded relative mb-6"><?= session()->getFlashdata('success') ?></div>
             <?php endif;?>
@@ -124,7 +124,7 @@
 
             <div id="tab-users" class="tab-content">
                 <?php if(!empty($users)): ?>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                         <?php foreach($users as $user): ?>
                         <div class="searchable-item bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
                             <div class="flex items-center space-x-3">
@@ -142,8 +142,7 @@
                         </div>
                         <?php endforeach; ?>
                     </div>
-                    <div class="flex justify-center"><?= $pager_users->links('users') ?></div>
-                <?php else: ?>
+                    <?php else: ?>
                     <div class="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-300 dark:border-gray-600">
                         <p class="text-gray-400 dark:text-gray-500 text-sm">No archived users found.</p>
                     </div>
@@ -152,7 +151,7 @@
 
             <div id="tab-depts" class="tab-content hidden">
                 <?php if(!empty($departments)): ?>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                         <?php foreach($departments as $dept): ?>
                         <div class="searchable-item bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
                             <div class="flex items-center space-x-3">
@@ -170,8 +169,7 @@
                         </div>
                         <?php endforeach; ?>
                     </div>
-                    <div class="flex justify-center"><?= $pager_departments->links('departments') ?></div>
-                <?php else: ?>
+                    <?php else: ?>
                     <div class="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-300 dark:border-gray-600">
                         <p class="text-gray-400 dark:text-gray-500 text-sm">No archived departments.</p>
                     </div>
@@ -180,7 +178,7 @@
 
             <div id="tab-folders" class="tab-content hidden">
                 <?php if(!empty($folders)): ?>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                         <?php foreach($folders as $folder): ?>
                         <div class="searchable-item bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
                             <div class="flex items-center space-x-3">
@@ -193,8 +191,7 @@
                         </div>
                         <?php endforeach; ?>
                     </div>
-                    <div class="flex justify-center"><?= $pager_folders->links('folders') ?></div>
-                <?php else: ?>
+                    <?php else: ?>
                     <div class="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-300 dark:border-gray-600">
                         <p class="text-gray-400 dark:text-gray-500 text-sm">No archived folders.</p>
                     </div>
@@ -203,7 +200,7 @@
 
             <div id="tab-files" class="tab-content hidden">
                 <?php if(!empty($files)): ?>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                         <?php foreach($files as $file): ?>
                         <div class="searchable-item bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
                             <div class="flex items-center space-x-3 overflow-hidden">
@@ -216,8 +213,7 @@
                         </div>
                         <?php endforeach; ?>
                     </div>
-                    <div class="flex justify-center mt-4"><?= $pager_files->links('files') ?></div>
-                <?php else: ?>
+                    <?php else: ?>
                     <div class="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-dashed border-gray-300 dark:border-gray-600">
                         <p class="text-gray-400 dark:text-gray-500 text-sm">No archived files.</p>
                     </div>
@@ -225,6 +221,29 @@
             </div>
 
         </main>
+
+        <div class="bg-white dark:bg-gray-900 py-2 px-4 shrink-0 z-20">
+            <div class="flex justify-center">
+                
+                <div id="pager-users" class="tab-pager">
+                    <?= !empty($pager_users) ? $pager_users->links('users') : '' ?>
+                </div>
+
+                <div id="pager-depts" class="tab-pager hidden">
+                    <?= !empty($pager_departments) ? $pager_departments->links('departments') : '' ?>
+                </div>
+
+                <div id="pager-folders" class="tab-pager hidden">
+                    <?= !empty($pager_folders) ? $pager_folders->links('folders') : '' ?>
+                </div>
+
+                <div id="pager-files" class="tab-pager hidden">
+                    <?= !empty($pager_files) ? $pager_files->links('files') : '' ?>
+                </div>
+
+            </div>
+        </div>
+
     </div>
 
     <div id="logoutModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 flex items-center justify-center backdrop-blur-sm">
@@ -233,7 +252,7 @@
                 <i class='bx bx-log-out text-2xl text-red-600'></i>
             </div>
             <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-2">Confirm Logout</h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Are you sure you want to sign out of your account?</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Are you sure you want to sign out?</p>
             <div class="flex justify-center space-x-3">
                 <button onclick="closeLogoutModal()" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 text-sm font-medium transition-colors">Cancel</button>
                 <a href="<?= base_url('/logout') ?>" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium shadow-md shadow-red-500/30 transition-colors">Logout</a>
@@ -242,19 +261,31 @@
     </div>
 
     <script>
-        // TAB SWITCHING LOGIC
+        // TAB SWITCHING LOGIC (Updated to handle Footer Pagination)
         function switchTab(tabName) {
+            // 1. Hide all tab contents
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            
+            // 2. Reset all tab buttons
             document.querySelectorAll('.tab-btn').forEach(el => {
                 el.classList.remove('active', 'border-blue-500', 'text-blue-600', 'dark:text-blue-400', 'dark:border-blue-400');
                 el.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
             });
 
+            // 3. Show selected tab content
             document.getElementById('tab-' + tabName).classList.remove('hidden');
+            
+            // 4. Highlight selected button
             const activeBtn = document.getElementById('btn-' + tabName);
             activeBtn.classList.add('active', 'border-blue-500', 'text-blue-600', 'dark:text-blue-400', 'dark:border-blue-400');
             activeBtn.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
             
+            // 5. FOOTER LOGIC: Show corresponding pagination
+            document.querySelectorAll('.tab-pager').forEach(el => el.classList.add('hidden')); // Hide all pagers
+            const activePager = document.getElementById('pager-' + tabName);
+            if(activePager) activePager.classList.remove('hidden'); // Show active pager
+
+            // Save state
             localStorage.setItem('activeArchiveTab', tabName);
             
             // Re-apply filter on tab switch
@@ -264,31 +295,20 @@
         // SEARCH FUNCTIONALITY
         function filterArchive() {
             let input = document.getElementById('archiveSearch').value.toLowerCase();
-            
-            // Determine active tab to filter only visible items
             let activeTabName = localStorage.getItem('activeArchiveTab') || 'users';
             let activeTab = document.getElementById('tab-' + activeTabName);
             
             if(activeTab) {
                 let items = activeTab.getElementsByClassName('searchable-item');
-                
                 for (let i = 0; i < items.length; i++) {
-                    // Get text from searchable elements (e.g., name, email, code)
                     let textElements = items[i].getElementsByClassName('search-text');
                     let match = false;
-                    
                     for(let j=0; j < textElements.length; j++) {
                         if (textElements[j].innerText.toLowerCase().indexOf(input) > -1) {
-                            match = true;
-                            break;
+                            match = true; break;
                         }
                     }
-
-                    if (match) {
-                        items[i].style.display = "";
-                    } else {
-                        items[i].style.display = "none";
-                    }
+                    items[i].style.display = match ? "" : "none";
                 }
             }
         }

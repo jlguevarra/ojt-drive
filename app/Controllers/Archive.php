@@ -35,7 +35,7 @@ class Archive extends BaseController
 
         $data['files'] = $fileModel->where('is_archived', 1)
                                    ->orderBy('updated_at', 'DESC')
-                                   ->paginate(6, 'files');
+                                   ->paginate(12, 'files');
         $data['pager_files'] = $fileModel->pager;
 
         return view('archive_view', $data);

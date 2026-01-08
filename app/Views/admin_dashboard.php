@@ -20,7 +20,7 @@
         body { font-family: 'Inter', sans-serif; }
 
         .fade-out {
-            animation: fadeOut 0.5s ease-in-out forwards;
+            animation: fadeOut 3s ease-in-out forwards;
         }
         @keyframes fadeOut {
             from { opacity: 1; }

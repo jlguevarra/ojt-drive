@@ -297,7 +297,7 @@ class Dashboard extends BaseController {
         
         $model = new \App\Models\LogModel();
         
-        $data['logs'] = $model->orderBy('created_at', 'DESC')->paginate(15); 
+        $data['logs'] = $model->orderBy('created_at', 'DESC')->paginate(13); 
         $data['pager'] = $model->pager;
         
         return view('activity_logs', $data);

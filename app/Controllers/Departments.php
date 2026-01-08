@@ -18,7 +18,7 @@ class Departments extends BaseController {
         // [CHANGED] Use paginate(10) instead of findAll()
         $data['departments'] = $model->where('is_archived', 0)
                                      ->orderBy('id', 'DESC')
-                                     ->paginate(5);
+                                     ->paginate(4);
         
         // [NEW] Pass the pager to the view
         $data['pager'] = $model->pager;
