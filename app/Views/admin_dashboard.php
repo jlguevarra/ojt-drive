@@ -19,7 +19,6 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
 
-        /* Fade out animation for alerts */
         .fade-out {
             animation: fadeOut 0.5s ease-in-out forwards;
         }
@@ -27,44 +26,102 @@
             from { opacity: 1; }
             to { opacity: 0; display: none; }
         }
+
+        /* --- VIEW MODES CSS --- */
+        /* GRID VIEW */
+        .view-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+        
+        /* LIST VIEW */
+        .view-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        /* List View Card Overrides */
+        .view-list .item-card {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            height: auto;
+            min-height: 3.5rem;
+        }
+        .view-list .item-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0;
+            margin-right: 1rem;
+        }
+        .view-list .item-name {
+            margin-top: 0;
+            flex: 1;
+            font-size: 0.875rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .view-list .item-meta {
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            width: auto;
+            text-align: right;
+        }
+        .view-list .item-actions {
+            position: static;
+            opacity: 1;
+            margin-left: 1rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Input Autofill Fix */
+        input:-webkit-autofill { -webkit-text-fill-color: #111827 !important; transition: background-color 5000s ease-in-out 0s; }
+        html.dark input:-webkit-autofill { -webkit-text-fill-color: #ffffff !important; }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 h-screen flex overflow-hidden transition-colors duration-300">
 
     <?= view('components/sidebar_admin'); ?>
 
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <div class="flex-1 flex flex-col h-full overflow-hidden relative">
         
-        <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-16 flex items-center justify-between px-6 pl-14 md:pl-6 shadow-sm z-10 transition-colors duration-300">
-            <div class="flex items-center flex-1 max-w-3xl">
-                <form action="<?= base_url('admin/dashboard') ?>" method="get" class="relative w-full max-w-md group mr-4">
-                    
+        <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-16 flex items-center justify-between px-6 shadow-sm z-20 shrink-0">
+            <div class="flex items-center flex-1 max-w-4xl gap-4">
+                
+                <form id="searchForm" action="<?= base_url('admin/dashboard') ?>" method="get" class="relative w-full max-w-md group">
                     <?php if(!empty($current_folder_id)): ?>
                         <input type="hidden" name="folder_id" value="<?= esc($current_folder_id) ?>">
                     <?php endif; ?>
                     <?php if(!empty($selected_dept)): ?>
                         <input type="hidden" name="dept" value="<?= esc($selected_dept) ?>">
                     <?php endif; ?>
+                    
+                    <input type="hidden" name="sort" value="<?= esc($sort_by ?? 'date_desc') ?>">
 
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <i class='bx bx-search text-gray-400 dark:text-gray-500 text-xl group-focus-within:text-blue-500 transition-colors'></i>
                     </span>
                     
-                    <input type="text" name="q" value="<?= esc($search_term ?? '') ?>" 
-                        placeholder="Search current folder..." 
-                        class="block w-full pl-10 pr-10 py-2 border-none rounded-lg bg-gray-100 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-600 transition-colors text-sm">
+                    <input type="text" name="q" id="searchInput" value="<?= esc($search_term ?? '') ?>" 
+                           placeholder="Search current folder..." autocomplete="off"
+                           class="block w-full pl-10 pr-10 py-2 border-none rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 transition-colors text-sm">
                     
-                    <?php if(!empty($search_term)): ?>
-                    <a href="<?= base_url('admin/dashboard' . ($current_folder_id ? '?folder_id='.$current_folder_id : '')) ?>" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-red-500 cursor-pointer transition-colors">
+                    <button type="button" id="clearSearchBtn" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-red-500 cursor-pointer hidden">
                         <i class='bx bx-x-circle text-xl'></i>
-                    </a>
-                    <?php endif; ?>
+                    </button>
                 </form>
 
                 <?php if(session()->get('role') === 'admin'): ?>
                 <form action="<?= base_url('admin/dashboard') ?>" method="get" class="hidden sm:block">
                     <?php if(!empty($search_term)): ?><input type="hidden" name="q" value="<?= esc($search_term) ?>"><?php endif; ?>
-                    <select name="dept" onchange="this.form.submit()" class="bg-gray-100 dark:bg-gray-700 border-none text-gray-700 dark:text-gray-200 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 block w-40 p-2 h-9 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                    <input type="hidden" name="sort" value="<?= esc($sort_by ?? 'date_desc') ?>">
+                    <select name="dept" onchange="this.form.submit()" class="bg-gray-100 dark:bg-gray-700 border-none text-gray-700 dark:text-gray-200 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 block w-40 p-2 h-9 cursor-pointer">
                         <option value="">All Departments</option>
                         <?php if(!empty($departments)): foreach($departments as $dept): ?>
                             <option value="<?= $dept['id'] ?>" <?= (isset($selected_dept) && $selected_dept == $dept['id']) ? 'selected' : '' ?>>
@@ -76,197 +133,198 @@
                 <?php endif; ?>
             </div>
 
-            <div class="flex items-center space-x-4 ml-4">
-                <button onclick="toggleTheme()" class="text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-yellow-400 transition-colors focus:outline-none">
+            <div class="flex items-center space-x-3">
+                <button onclick="toggleTheme()" class="text-gray-500 hover:text-blue-600 dark:text-gray-400 transition-colors">
                     <i class='bx bxs-sun text-2xl dark:hidden'></i>
                     <i class='bx bxs-moon text-2xl hidden dark:block'></i>
                 </button>
-
-                <div class="text-right hidden sm:block">
-                    <p class="text-sm font-medium text-gray-800 dark:text-gray-200"><?= session()->get('username') ?></p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase"><?= session()->get('role') ?></p>
-                </div>
-                <div class="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                
+                <div class="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold cursor-default">
                     <?= substr(session()->get('username'), 0, 1) ?>
                 </div>
                 
-                <button onclick="openLogoutModal()" class="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors" title="Logout">
+                <button onclick="openLogoutModal()" class="text-gray-500 hover:text-red-600 dark:text-gray-400 transition-colors" title="Logout">
                     <i class='bx bx-log-out text-2xl'></i>
                 </button>
             </div>
         </header>
 
-        <main class="flex-1 overflow-y-auto p-6">
+        <div class="px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 shrink-0 z-10">
+            
+            <nav class="flex overflow-x-auto w-full md:w-auto" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center space-x-1 md:space-x-2">
+                    <li class="inline-flex items-center">
+                        <a href="<?= base_url('admin/dashboard') ?>" class="inline-flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600">
+                            <i class='bx bxs-home mr-2'></i> My Drive
+                        </a>
+                    </li>
+                    <?php if(!empty($breadcrumbs)): foreach($breadcrumbs as $crumb): ?>
+                    <li>
+                        <div class="flex items-center">
+                            <i class='bx bx-chevron-right text-gray-400 text-xl'></i>
+                            <a href="<?= base_url('admin/dashboard?folder_id='.$crumb['id']) ?>" class="ml-1 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 md:ml-2">
+                                <?= esc($crumb['name']) ?>
+                            </a>
+                        </div>
+                    </li>
+                    <?php endforeach; endif; ?>
+                </ol>
+            </nav>
+
+            <div class="flex items-center gap-2">
+                <form action="<?= base_url('admin/dashboard') ?>" method="get">
+                    <?php if(!empty($current_folder_id)): ?><input type="hidden" name="folder_id" value="<?= esc($current_folder_id) ?>"><?php endif; ?>
+                    <?php if(!empty($search_term)): ?><input type="hidden" name="q" value="<?= esc($search_term) ?>"><?php endif; ?>
+                    <?php if(!empty($selected_dept)): ?><input type="hidden" name="dept" value="<?= esc($selected_dept) ?>"><?php endif; ?>
+                    
+                    <select name="sort" onchange="this.form.submit()" class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-sm rounded-lg focus:ring-blue-500 block p-2 h-10 cursor-pointer shadow-sm">
+                        <option value="date_desc" <?= ($sort_by ?? 'date_desc') == 'date_desc' ? 'selected' : '' ?>>Newest First</option>
+                        <option value="date_asc" <?= ($sort_by ?? '') == 'date_asc' ? 'selected' : '' ?>>Oldest First</option>
+                        <option value="name_asc" <?= ($sort_by ?? '') == 'name_asc' ? 'selected' : '' ?>>A-Z</option>
+                        <option value="name_desc" <?= ($sort_by ?? '') == 'name_desc' ? 'selected' : '' ?>>Z-A</option>
+                    </select>
+                </form>
+
+                <div class="flex bg-gray-200 dark:bg-gray-700 rounded-lg p-1">
+                    <button onclick="setView('grid')" id="btnGrid" class="p-1.5 rounded-md hover:bg-white dark:hover:bg-gray-600 shadow-sm transition-all text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-600">
+                        <i class='bx bxs-grid-alt text-lg'></i>
+                    </button>
+                    <button onclick="setView('list')" id="btnList" class="p-1.5 rounded-md hover:bg-white dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400 transition-all">
+                        <i class='bx bx-list-ul text-lg'></i>
+                    </button>
+                </div>
+
+                <button onclick="openFolderModal()" class="h-10 px-3 flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-white transition-colors" title="New Folder">
+                    <i class='bx bx-folder-plus text-xl mr-1'></i> <span class="text-sm font-medium hidden sm:inline">New Folder</span>
+                </button>
+                <div class="flex gap-1">
+                    <button onclick="openUploadFolderModal()" class="h-10 w-10 flex items-center justify-center bg-indigo-600 rounded-lg hover:bg-indigo-700 text-white shadow-md transition-colors" title="Upload Folder">
+                        <i class='bx bx-folder text-xl'></i>
+                    </button>
+                    <button onclick="openUploadModal()" class="h-10 w-10 flex items-center justify-center bg-blue-600 rounded-lg hover:bg-blue-700 text-white shadow-md transition-colors" title="Upload File">
+                        <i class='bx bx-cloud-upload text-xl'></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <main class="flex-1 overflow-y-auto p-6 scroll-smooth bg-white dark:bg-gray-900">
             
             <div id="alert-container">
                 <?php if(session()->getFlashdata('success')):?>
-                    <div class="alert-toast bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-300 px-4 py-3 rounded relative mb-4 flex justify-between items-center transition-all duration-500" role="alert">
-                        <div class="flex items-center">
-                            <i class='bx bxs-check-circle mr-2 text-xl'></i>
-                            <span><?= session()->getFlashdata('success') ?></span>
-                        </div>
-                        <button onclick="this.parentElement.remove()" class="text-green-700 dark:text-green-300 hover:text-green-900 dark:hover:text-green-100 font-bold ml-4 text-xl leading-none focus:outline-none">&times;</button>
+                    <div class="alert-toast bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-300 px-4 py-3 rounded relative mb-4 fade-out">
+                        <span class="flex items-center"><i class='bx bxs-check-circle mr-2'></i> <?= session()->getFlashdata('success') ?></span>
                     </div>
                 <?php endif;?>
-                
                 <?php if(session()->getFlashdata('error')):?>
-                    <div class="alert-toast bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded relative mb-4 flex justify-between items-center transition-all duration-500" role="alert">
-                        <div class="flex items-center">
-                            <i class='bx bxs-error-circle mr-2 text-xl'></i>
-                            <span><?= session()->getFlashdata('error') ?></span>
-                        </div>
-                        <button onclick="this.parentElement.remove()" class="text-red-700 dark:text-red-300 hover:text-red-900 dark:hover:text-red-100 font-bold ml-4 text-xl leading-none focus:outline-none">&times;</button>
+                    <div class="alert-toast bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded relative mb-4 fade-out">
+                        <span class="flex items-center"><i class='bx bxs-error-circle mr-2'></i> <?= session()->getFlashdata('error') ?></span>
                     </div>
                 <?php endif;?>
             </div>
 
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <div id="contentContainer" class="view-grid pb-4">
                 
-                <nav class="flex overflow-x-auto" aria-label="Breadcrumb">
-                    <ol class="inline-flex items-center space-x-1 md:space-x-2">
-                        <li class="inline-flex items-center">
-                            <a href="<?= base_url('admin/dashboard') ?>" class="inline-flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">
-                                <i class='bx bxs-home mr-2'></i> My Drive
-                            </a>
-                        </li>
-                        
-                        <?php if(!empty($breadcrumbs)): foreach($breadcrumbs as $crumb): ?>
-                        <li>
-                            <div class="flex items-center">
-                                <i class='bx bx-chevron-right text-gray-400 text-xl'></i>
-                                <a href="<?= base_url('admin/dashboard?folder_id='.$crumb['id']) ?>" class="ml-1 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 md:ml-2">
-                                    <?= esc($crumb['name']) ?>
+                <?php if(!empty($items)): foreach($items as $item): ?>
+                    
+                    <?php if($item['type'] === 'folder'): ?>
+                        <a href="<?= base_url('admin/dashboard?folder_id='.$item['id']) ?>" class="item-card group bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md transition-all relative">
+                            <div class="item-icon text-yellow-500 mb-2 group-hover:scale-110 transition-transform duration-200">
+                                <i class='bx bxs-folder text-4xl'></i>
+                            </div>
+                            
+                            <h3 class="item-name text-sm font-medium text-gray-700 dark:text-gray-200 truncate" title="<?= esc($item['name']) ?>">
+                                <?= esc($item['name']) ?>
+                            </h3>
+                            
+                            <div class="item-meta mt-1 text-xs text-gray-400 dark:text-gray-500 flex justify-between items-center w-full">
+                                <span><?= date('M d, Y', strtotime($item['created_at'])) ?></span>
+                                <?php if(session()->get('role') === 'admin' && !empty($item['dept_code'])): ?>
+                                    <span class="bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded text-[10px] uppercase font-bold border border-gray-200 dark:border-gray-600"><?= esc($item['dept_code']) ?></span>
+                                <?php endif; ?>
+                            </div>
+                            
+                            <div class="item-actions absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <object>
+                                    <a href="<?= base_url('folder/delete/'.$item['id']) ?>" onclick="return confirm('Delete folder?')" class="p-1.5 text-gray-400 hover:text-red-500 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 block transition-colors">
+                                        <i class='bx bx-trash text-lg'></i>
+                                    </a>
+                                </object>
+                            </div>
+                        </a>
+
+                    <?php else: ?>
+                        <div class="item-card group bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md transition-all relative cursor-default">
+                            <div class="item-icon text-blue-500 mb-2 group-hover:scale-110 transition-transform duration-200 cursor-pointer" onclick="openPreview(<?= $item['id'] ?>, '<?= esc($item['name']) ?>')">
+                                <i class='bx bxs-file-doc text-4xl'></i>
+                            </div>
+                            
+                            <h3 class="item-name text-sm font-medium text-gray-700 dark:text-gray-200 truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400" 
+                                onclick="openPreview(<?= $item['id'] ?>, '<?= esc($item['name']) ?>')" title="<?= esc($item['name']) ?>">
+                                <?= esc($item['name']) ?>
+                            </h3>
+                            
+                            <div class="item-meta mt-1 text-xs text-gray-400 dark:text-gray-500 flex justify-between items-center w-full">
+                                <div class="flex flex-col text-right w-full">
+                                    <span><?= esc($item['file_size']) ?></span>
+                                    <span class="text-[10px]"><?= date('M d, Y', strtotime($item['created_at'])) ?></span>
+                                </div>
+                                <?php if(session()->get('role') === 'admin' && !empty($item['dept_code'])): ?>
+                                    <span class="bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded text-[10px] uppercase font-bold border border-gray-200 dark:border-gray-600 ml-2"><?= esc($item['dept_code']) ?></span>
+                                <?php endif; ?>
+                            </div>
+                            
+                            <div class="item-actions absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex">
+                                <a href="<?= base_url('file/download/'.$item['id']) ?>" class="p-1.5 text-gray-400 hover:text-blue-500 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" title="Download">
+                                    <i class='bx bx-download text-lg'></i>
+                                </a>
+                                <a href="<?= base_url('file/delete/'.$item['id']) ?>" onclick="return confirm('Delete file?')" class="p-1.5 text-gray-400 hover:text-red-500 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" title="Delete">
+                                    <i class='bx bx-trash text-lg'></i>
                                 </a>
                             </div>
-                        </li>
-                        <?php endforeach; endif; ?>
-                    </ol>
-                </nav>
+                        </div>
+                    <?php endif; ?>
 
-                <div class="flex space-x-2 md:space-x-3">
-                    <button onclick="openFolderModal()" class="flex items-center px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors whitespace-nowrap">
-                        <i class='bx bx-folder-plus mr-2 text-lg'></i> New Folder
-                    </button>
-                    <button onclick="openUploadFolderModal()" class="flex items-center px-3 py-2 bg-indigo-600 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white hover:bg-indigo-700 transition-colors whitespace-nowrap">
-                        <i class='bx bx-folder mr-2 text-lg'></i> Upload Folder
-                    </button>
-                    <button onclick="openUploadModal()" class="flex items-center px-3 py-2 bg-blue-600 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white hover:bg-blue-700 transition-colors whitespace-nowrap">
-                        <i class='bx bx-cloud-upload mr-2 text-lg'></i> Upload File
-                    </button>
-                </div>
-            </div>
-
-            <?php if(!empty($folders)): ?>
-            <h2 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">Folders</h2>
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-4">
-                <?php foreach($folders as $folder): ?>
-                <a href="<?= base_url('admin/dashboard?folder_id='.$folder['id']) ?>" class="block group folder-item">
-                    <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-gray-700 hover:border-blue-200 dark:hover:border-gray-600 cursor-pointer transition-all flex items-center space-x-3 relative">
-                        <i class='bx bxs-folder text-yellow-500 text-3xl group-hover:scale-110 transition-transform'></i>
-                        
-                        <span class="text-sm font-medium text-gray-700 dark:text-gray-200 truncate flex-1 folder-name" title="<?= esc($folder['name']) ?>">
-                            <?= esc($folder['name']) ?>
-                        </span>
-
-                        <?php if(session()->get('role') === 'admin' && !empty($folder['dept_code'])): ?>
-                            <span class="bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-[10px] font-bold px-2 py-1 rounded border border-gray-200 dark:border-gray-600" title="Department">
-                                <?= esc($folder['dept_code']) ?>
-                            </span>
+                <?php endforeach; else: ?>
+                    <div class="col-span-full text-center py-20 flex flex-col items-center justify-center">
+                        <div class="inline-block p-6 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
+                            <i class='bx bx-folder-open text-5xl text-gray-300 dark:text-gray-600'></i>
+                        </div>
+                        <p class="text-gray-500 dark:text-gray-400 font-medium">It's empty here.</p>
+                        <?php if(!empty($search_term)): ?>
+                            <p class="text-sm text-gray-400 mt-1">No results found for "<?= esc($search_term) ?>"</p>
                         <?php endif; ?>
-                        
-                        <object class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                            <a href="<?= base_url('folder/delete/'.$folder['id']) ?>" onclick="return confirm('Delete folder and all contents?')" class="text-gray-400 hover:text-red-500 p-1">
-                                <i class='bx bx-trash'></i>
-                            </a>
-                        </object>
-                    </div>
-                </a>
-                <?php endforeach; ?>
-            </div>
-            
-            <div class="mb-8">
-                <?= $pager_folders->links('folders', 'default_full') ?>
-            </div>
-            <?php endif; ?>
-
-            <h2 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">Files</h2>
-            <div id="fileGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
-                
-                <?php if(!empty($files)): foreach($files as $file): ?>
-                
-                <div class="file-item bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow flex flex-col justify-between h-44 relative group">
-                    <div class="flex justify-between items-start">
-                        <div class="flex items-center space-x-2">
-                            <div class="p-2 rounded-lg bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300">
-                                <i class='bx bxs-file-doc text-xl'></i>
-                            </div>
-                            
-                            <?php if(session()->get('role') === 'admin' && !empty($file['dept_code'])): ?>
-                                <span class="bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 text-[10px] font-bold px-2 py-1 rounded border border-gray-200 dark:border-gray-600">
-                                    <?= esc($file['dept_code']) ?>
-                                </span>
-                            <?php endif; ?>
-                        </div>
-
-                        <a href="<?= base_url('file/delete/'.$file['id']) ?>" onclick="return confirm('Delete?')" class="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1">
-                            <i class='bx bx-trash text-xl'></i>
-                        </a>
-                    </div>
-                    <div>
-                        <h3 class="file-name text-sm font-medium text-gray-700 dark:text-gray-200 truncate mt-2" title="<?= esc($file['filename']) ?>">
-                            <?= esc($file['filename']) ?>
-                        </h3>
-                        <div class="flex justify-between items-end mt-1">
-                            <div class="flex flex-col">
-                                <p class="text-[10px] text-gray-400 dark:text-gray-500 uppercase font-semibold tracking-wider">
-                                    <?= !empty($file['folder_name']) ? esc($file['folder_name']) : 'File' ?>
-                                </p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400"><?= esc($file['file_size']) ?></p>
-                            </div>
-                            
-                            <button onclick="openPreview(<?= $file['id'] ?>, '<?= esc($file['filename']) ?>')" class="text-blue-600 dark:text-blue-400 hover:underline text-xs font-semibold">Preview</button>
-                        </div>
-                    </div>
-                </div>
-
-                <?php endforeach; endif; ?>
-                
-                <?php if(empty($files) && empty($folders)): ?>
-                    <div class="col-span-full text-center py-12">
-                        <div class="inline-block p-4 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
-                            <i class='bx bx-folder-open text-4xl text-gray-400'></i>
-                        </div>
-                        <p class="text-gray-500 dark:text-gray-400 font-medium">This folder is empty.</p>
-                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Upload a file or create a folder to get started.</p>
                     </div>
                 <?php endif; ?>
             </div>
 
-            <div class="mb-8">
-                <?= $pager_files->links('files', 'default_full') ?>
-            </div>
-
         </main>
+
+        <div class="bg-white dark:bg-gray-900 p-4 shrink-0 z-20">
+            <div class="flex justify-center">
+                <?= isset($pager_links) ? $pager_links : '' ?>
+            </div>
+        </div>
     </div>
 
-    <div id="folderModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 flex items-center justify-center backdrop-blur-sm">
+    <div id="folderModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl w-80 transform scale-100 transition-transform">
             <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">Create New Folder</h3>
             <form action="<?= base_url('/folder/create') ?>" method="post">
                 <input type="hidden" name="parent_id" value="<?= esc($current_folder_id ?? '') ?>">
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Folder Name</label>
-                    <input type="text" name="folder_name" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-white" placeholder="e.g., Midterms" required autofocus>
+                    <input type="text" name="folder_name" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-white" required autofocus>
                 </div>
-                <div class="flex justify-end space-x-2">
-                    <button type="button" onclick="closeFolderModal()" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 text-sm font-medium">Cancel</button>
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="document.getElementById('folderModal').classList.add('hidden')" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 text-sm font-medium">Cancel</button>
                     <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">Create</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="uploadModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 flex items-center justify-center backdrop-blur-sm">
+    <div id="uploadModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-96 transform transition-all scale-100">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-xl font-bold text-gray-800 dark:text-white">Upload File</h3>
@@ -283,7 +341,6 @@
                     <div class="space-y-2">
                         <i class='bx bx-cloud-upload text-5xl text-blue-400 dark:text-blue-500 group-hover:scale-110 transition-transform'></i>
                         <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Click or Drag file here</p>
-                        <p class="text-xs text-gray-400 dark:text-gray-500">PDF, DOCX, XLSX, JPG</p>
                     </div>
                     <p id="fileNameDisplay" class="text-sm text-blue-600 dark:text-blue-400 mt-4 font-semibold break-all"></p>
                 </div>
@@ -295,7 +352,7 @@
         </div>
     </div>
 
-    <div id="uploadFolderModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 flex items-center justify-center backdrop-blur-sm">
+    <div id="uploadFolderModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-96 transform transition-all scale-100">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-xl font-bold text-gray-800 dark:text-white">Upload Folder</h3>
@@ -315,7 +372,6 @@
                     <div class="space-y-2">
                         <i class='bx bx-folder-plus text-5xl text-indigo-400 dark:text-indigo-500 group-hover:scale-110 transition-transform'></i>
                         <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Click or Drag Folder</p>
-                        <p class="text-xs text-gray-400 dark:text-gray-500">Select an entire directory</p>
                     </div>
                     <p id="folderNameDisplay" class="text-sm text-indigo-600 dark:text-indigo-400 mt-4 font-semibold break-all"></p>
                 </div>
@@ -327,38 +383,32 @@
         </div>
     </div>
 
-    <div id="logoutModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 flex items-center justify-center backdrop-blur-sm">
+    <div id="logoutModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl w-80 transform scale-100 transition-transform text-center">
-            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-                <i class='bx bx-log-out text-2xl text-red-600'></i>
-            </div>
             <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-2">Confirm Logout</h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Are you sure you want to sign out of your account?</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Are you sure you want to sign out?</p>
             <div class="flex justify-center space-x-3">
-                <button onclick="closeLogoutModal()" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 text-sm font-medium transition-colors">Cancel</button>
+                <button onclick="document.getElementById('logoutModal').classList.add('hidden')" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 text-sm font-medium transition-colors">Cancel</button>
                 <a href="<?= base_url('/logout') ?>" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium shadow-md shadow-red-500/30 transition-colors">Logout</a>
             </div>
         </div>
     </div>
 
-    <div id="previewModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden z-50 flex items-center justify-center backdrop-blur-sm">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col">
-            <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
-                <h3 class="text-lg font-bold text-gray-800 dark:text-white" id="previewTitle">File Preview</h3>
-                <div class="flex space-x-2">
-                    <a id="downloadBtn" href="#" class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 flex items-center">
-                        <i class='bx bx-download mr-1'></i> Download
-                    </a>
-                    <button onclick="closePreview()" class="text-gray-500 hover:text-red-600 dark:text-gray-400 text-2xl">&times;</button>
+    <div id="previewModal" class="fixed inset-0 bg-gray-900 bg-opacity-95 hidden z-50 flex items-center justify-center backdrop-blur-sm">
+        <div class="w-full h-full flex flex-col p-4 max-w-7xl mx-auto">
+            <div class="flex justify-between items-center mb-2 text-white shrink-0">
+                <h3 id="previewTitle" class="font-bold truncate text-lg">Preview</h3>
+                <div class="flex gap-4">
+                    <a id="downloadBtn" href="#" class="flex items-center hover:text-blue-400"><i class='bx bx-download mr-1'></i> Download</a>
+                    <button onclick="closePreview()" class="text-2xl hover:text-red-400">&times;</button>
                 </div>
             </div>
-            <div class="flex-1 bg-gray-100 dark:bg-gray-900 p-2 relative flex items-center justify-center">
-                <iframe id="previewFrame" src="" class="w-full h-full border-none bg-white hidden"></iframe>
+            <div class="flex-1 bg-gray-100 dark:bg-gray-800 rounded-lg relative flex items-center justify-center overflow-hidden">
+                <iframe id="previewFrame" class="w-full h-full border-none bg-white hidden"></iframe>
                 <div id="noPreviewMsg" class="text-center hidden">
                     <i class='bx bxs-file-doc text-6xl text-gray-400 mb-4'></i>
                     <h3 class="text-xl font-bold text-gray-700 dark:text-gray-300">Preview Not Available</h3>
                     <p class="text-gray-500 dark:text-gray-400 mt-2">This file type cannot be viewed in the browser.</p>
-                    <p class="text-gray-500 dark:text-gray-400">Please download the file to view it.</p>
                 </div>
                 <div id="previewLoading" class="absolute inset-0 flex items-center justify-center text-gray-500 hidden bg-white dark:bg-gray-900 bg-opacity-90">
                     <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -368,17 +418,73 @@
     </div>
 
     <script>
-        // --- ALERT AUTO DISMISS SCRIPT ---
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(function() {
-                const alerts = document.querySelectorAll('.alert-toast');
-                alerts.forEach(function(alert) {
-                    alert.classList.add('fade-out');
-                    setTimeout(() => alert.remove(), 500);
-                });
-            }, 5000);
+        // --- VIEW TOGGLE LOGIC ---
+        function setView(type) {
+            const container = document.getElementById('contentContainer');
+            const btnGrid = document.getElementById('btnGrid');
+            const btnList = document.getElementById('btnList');
+            
+            localStorage.setItem('viewMode', type);
+
+            if (type === 'list') {
+                container.classList.remove('view-grid');
+                container.classList.add('view-list');
+                
+                // Highlight List Btn
+                btnList.classList.add('bg-white', 'dark:bg-gray-600', 'text-blue-600', 'dark:text-blue-400', 'shadow-sm');
+                btnList.classList.remove('text-gray-500', 'dark:text-gray-400');
+                // Dim Grid Btn
+                btnGrid.classList.remove('bg-white', 'dark:bg-gray-600', 'text-blue-600', 'dark:text-blue-400', 'shadow-sm');
+                btnGrid.classList.add('text-gray-500', 'dark:text-gray-400');
+            } else {
+                container.classList.add('view-grid');
+                container.classList.remove('view-list');
+                
+                // Highlight Grid Btn
+                btnGrid.classList.add('bg-white', 'dark:bg-gray-600', 'text-blue-600', 'dark:text-blue-400', 'shadow-sm');
+                btnGrid.classList.remove('text-gray-500', 'dark:text-gray-400');
+                // Dim List Btn
+                btnList.classList.remove('bg-white', 'dark:bg-gray-600', 'text-blue-600', 'dark:text-blue-400', 'shadow-sm');
+                btnList.classList.add('text-gray-500', 'dark:text-gray-400');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedView = localStorage.getItem('viewMode') || 'grid';
+            setView(savedView);
+            
+            // Auto dismiss alerts
+            setTimeout(() => {
+                document.querySelectorAll('.alert-toast').forEach(el => el.style.display = 'none');
+            }, 4000);
         });
 
+        // --- AUTO-SEARCH (SERVER SIDE) ---
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearSearchBtn');
+        let searchTimeout = null;
+
+        searchInput.addEventListener('input', function() {
+            // Toggle X button
+            if(this.value.length > 0) clearBtn.classList.remove('hidden');
+            else clearBtn.classList.add('hidden');
+
+            // Debounce submit
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                document.getElementById('searchForm').submit();
+            }, 600); // 600ms delay before reloading
+        });
+
+        clearBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            document.getElementById('searchForm').submit();
+        });
+
+        // Show X button on load if there's a value
+        if(searchInput.value.length > 0) clearBtn.classList.remove('hidden');
+
+        // --- MODAL HELPERS ---
         function openUploadModal() { document.getElementById('uploadModal').classList.remove('hidden'); }
         function closeUploadModal() { 
             document.getElementById('uploadModal').classList.add('hidden');
@@ -388,57 +494,50 @@
             if(input.files && input.files[0]) document.getElementById('fileNameDisplay').innerText = input.files[0].name;
         }
 
-        // --- Upload Folder Logic ---
         function openUploadFolderModal() { document.getElementById('uploadFolderModal').classList.remove('hidden'); }
         function closeUploadFolderModal() { 
             document.getElementById('uploadFolderModal').classList.add('hidden');
             document.getElementById('folderNameDisplay').innerText = "";
         }
-        
         function updateFolderName(input) {
             if(input.files && input.files.length > 0) {
                 let fullPath = input.files[0].webkitRelativePath;
                 let rootFolder = fullPath.split('/')[0];
                 document.getElementById('detectedFolderName').value = rootFolder;
-                document.getElementById('folderNameDisplay').innerText = 
-                    "Folder: '" + rootFolder + "' (" + input.files.length + " files)";
+                document.getElementById('folderNameDisplay').innerText = "Folder: " + rootFolder + " (" + input.files.length + " files)";
             }
         }
-        // --------------------------------
 
         function openFolderModal() { 
             document.getElementById('folderModal').classList.remove('hidden'); 
             document.querySelector('#folderModal input[name="folder_name"]').focus();
         }
-        function closeFolderModal() { document.getElementById('folderModal').classList.add('hidden'); }
-
         function openLogoutModal() { document.getElementById('logoutModal').classList.remove('hidden'); }
-        function closeLogoutModal() { document.getElementById('logoutModal').classList.add('hidden'); }
 
-        function openPreview(id, filename) {
-            document.getElementById('previewModal').classList.remove('hidden');
-            document.getElementById('previewTitle').innerText = filename;
+        function openPreview(id, name) {
+            const modal = document.getElementById('previewModal');
+            const frame = document.getElementById('previewFrame');
+            const noPrev = document.getElementById('noPreviewMsg');
+            const load = document.getElementById('previewLoading');
+            
+            document.getElementById('previewTitle').innerText = name;
             document.getElementById('downloadBtn').href = "<?= base_url('file/download/') ?>" + id;
             
-            const frame = document.getElementById('previewFrame');
-            const noPreview = document.getElementById('noPreviewMsg');
-            const loading = document.getElementById('previewLoading');
-
-            const ext = filename.split('.').pop().toLowerCase();
+            const ext = name.split('.').pop().toLowerCase();
             const viewable = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'txt'];
 
-            if (viewable.includes(ext)) {
-                noPreview.classList.add('hidden');
+            if(viewable.includes(ext)) {
+                noPrev.classList.add('hidden');
                 frame.classList.remove('hidden');
-                loading.classList.remove('hidden');
-                frame.onload = function() { loading.classList.add('hidden'); };
+                load.classList.remove('hidden');
                 frame.src = "<?= base_url('file/preview/') ?>" + id;
+                frame.onload = function() { load.classList.add('hidden'); };
             } else {
-                frame.src = "";
                 frame.classList.add('hidden');
-                loading.classList.add('hidden');
-                noPreview.classList.remove('hidden');
+                load.classList.add('hidden');
+                noPrev.classList.remove('hidden');
             }
+            modal.classList.remove('hidden');
         }
         function closePreview() {
             document.getElementById('previewModal').classList.add('hidden');

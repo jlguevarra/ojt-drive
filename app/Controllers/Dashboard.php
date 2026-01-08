@@ -14,44 +14,91 @@ class Dashboard extends BaseController {
         
         $db = \Config\Database::connect();
         $folderModel = new FolderModel();
-        $fileModel = new FileModel(); // Instantiate FileModel
+        $fileModel = new FileModel();
         $userModel = new UserModel();
         
         $currentUser = $userModel->find($session->get('id'));
         $userDeptId = $currentUser['department_id'] ?? null;
 
+        // --- 1. GET PARAMETERS ---
         $currentFolderId = $this->request->getGet('folder_id');
         $currentFolderId = !empty($currentFolderId) ? $currentFolderId : null;
-        
-        $search = $this->request->getGet('q'); // Get search term
+        $search = $this->request->getGet('q');
         $filterDept = $this->request->getGet('dept');
+        $sort = $this->request->getGet('sort') ?? 'date_desc'; // Default: Newest first
 
-        // --- A. FOLDERS ---
-        $folderBuilder = $folderModel->where('parent_id', $currentFolderId)
-                                     ->where('folders.is_archived', 0); 
-
-        $folderBuilder->select('folders.*, departments.code as dept_code');
-        $folderBuilder->join('departments', 'departments.id = folders.department_id', 'left');
+        // --- 2. FETCH FOLDERS ---
+        $folderBuilder = $folderModel->select('folders.id, folders.name as name, folders.created_at, "folder" as type, NULL as file_size, departments.code as dept_code')
+                                     ->join('departments', 'departments.id = folders.department_id', 'left')
+                                     ->where('folders.is_archived', 0)
+                                     ->where('folders.parent_id', $currentFolderId);
 
         if($role === 'program_chair' && $userDeptId) {
             $folderBuilder->where('folders.department_id', $userDeptId);
         }
-
         if($role === 'admin' && !empty($filterDept)) {
             $folderBuilder->where('folders.department_id', $filterDept);
         }
-
-        // Apply search to folders
         if(!empty($search)){ 
-            $folderBuilder->groupStart()
-                          ->like('folders.name', $search)
-                          ->groupEnd(); 
+            $folderBuilder->like('folders.name', $search);
+        }
+        
+        $folders = $folderBuilder->findAll();
+
+        // --- 3. FETCH FILES ---
+        $fileBuilder = $fileModel->select('files.id, files.filename as name, files.created_at, "file" as type, files.file_size, departments.code as dept_code')
+                                 ->join('departments', 'departments.id = files.department_id', 'left')
+                                 ->where('files.is_archived', 0);
+
+        if($currentFolderId){
+            $fileBuilder->where('files.folder_id', $currentFolderId);
+        } else {
+            $fileBuilder->where('files.folder_id', NULL);
         }
 
-        // Paginate Folders (10 per page, group 'folders')
-        $data['folders'] = $folderBuilder->paginate(10, 'folders');
-        $data['pager_folders'] = $folderModel->pager;
+        if($role === 'program_chair') {
+            if($userDeptId) $fileBuilder->where('files.department_id', $userDeptId);
+            else $fileBuilder->where('files.id', -1); 
+        }
+        if($role === 'admin' && !empty($filterDept)) {
+            $fileBuilder->where('files.department_id', $filterDept);
+        }
+        if(!empty($search)){ 
+            $fileBuilder->like('files.filename', $search);
+        }
 
+        $files = $fileBuilder->findAll();
+
+        // --- 4. MERGE & SORT ---
+        $items = array_merge($folders, $files);
+
+        usort($items, function($a, $b) use ($sort) {
+            $dateA = strtotime($a['created_at']);
+            $dateB = strtotime($b['created_at']);
+            $nameA = strtolower($a['name']);
+            $nameB = strtolower($b['name']);
+
+            switch ($sort) {
+                case 'date_asc': return $dateA <=> $dateB;
+                case 'name_asc': return $nameA <=> $nameB;
+                case 'name_desc': return $nameB <=> $nameA;
+                case 'date_desc': 
+                default: return $dateB <=> $dateA;
+            }
+        });
+
+        // --- 5. MANUAL PAGINATION ---
+        $pager = \Config\Services::pager();
+        $page = $this->request->getVar('page') ? (int)$this->request->getVar('page') : 1;
+        $perPage = 8;
+        $total = count($items);
+        $offset = ($page - 1) * $perPage;
+        
+        // Slice the array for the current page
+        $data['items'] = array_slice($items, $offset, $perPage);
+        $data['pager_links'] = $pager->makeLinks($page, $perPage, $total, 'default_full');
+        
+        // --- 6. METADATA ---
         // Breadcrumbs
         $breadcrumbs = [];
         if ($currentFolderId) {
@@ -66,49 +113,11 @@ class Dashboard extends BaseController {
         }
         $data['breadcrumbs'] = $breadcrumbs;
         $data['current_folder_id'] = $currentFolderId;
-
-        // --- B. FILES ---
-        // Use FileModel instead of $db->table for pagination compatibility
-        $fileBuilder = $fileModel->where('files.is_archived', 0);
-        
-        $fileBuilder->select('files.*, departments.code as dept_code');
-        $fileBuilder->join('departments', 'departments.id = files.department_id', 'left');
-        
-        if($currentFolderId){
-            $fileBuilder->where('files.folder_id', $currentFolderId);
-        } else {
-            $fileBuilder->where('files.folder_id', NULL);
-        }
-
-        if($role === 'program_chair') {
-            if($userDeptId) {
-                $fileBuilder->where('files.department_id', $userDeptId);
-            } else {
-                $fileBuilder->where('files.id', -1); 
-            }
-        }
-
-        if($role === 'admin' && !empty($filterDept)) {
-            $fileBuilder->where('files.department_id', $filterDept);
-        }
-
-        // Apply search to files
-        if(!empty($search)){ 
-            $fileBuilder->groupStart()
-                        ->like('files.filename', $search)
-                        ->groupEnd(); 
-        }
-
-        // Paginate Files (10 per page, group 'files')
-        $data['files'] = $fileBuilder->orderBy('files.created_at', 'DESC')->paginate(10, 'files');
-        $data['pager_files'] = $fileModel->pager;
-        
         $data['search_term'] = $search;
-        
+        $data['sort_by'] = $sort;
+
         if($role === 'admin') {
-            $data['departments'] = $db->table('departments')
-                                      ->where('is_archived', 0)
-                                      ->get()->getResultArray();
+            $data['departments'] = $db->table('departments')->where('is_archived', 0)->get()->getResultArray();
             $data['selected_dept'] = $filterDept;
         }
 

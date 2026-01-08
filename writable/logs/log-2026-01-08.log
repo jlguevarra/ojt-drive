@@ -1,0 +1,30 @@
+CRITICAL - 2026-01-08 02:24:08 --> ErrorException: Undefined variable $pager_files
+[Method: GET, Route: admin/dashboard]
+in APPPATH\Views\admin_dashboard.php on line 267.
+ 1 APPPATH\Views\admin_dashboard.php(267): CodeIgniter\Debug\Exceptions->errorHandler(2, 'Undefined variable $pager_files', 'C:\\xampp\\htdocs\\ojt-drive\\app\\Views\\admin_dashboard.php', 267)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\ojt-drive\\app\\Views\\admin_dashboard.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin_dashboard', [], true)
+ 5 APPPATH\Controllers\Dashboard.php(124): view('admin_dashboard', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Dashboard->admin()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Dashboard))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+12 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\ojt-drive\\public\\index.php')
+CRITICAL - 2026-01-08 02:48:23 --> ErrorException: Undefined variable $pager_files
+[Method: GET, Route: admin/dashboard]
+in APPPATH\Views\admin_dashboard.php on line 266.
+ 1 APPPATH\Views\admin_dashboard.php(266): CodeIgniter\Debug\Exceptions->errorHandler(2, 'Undefined variable $pager_files', 'C:\\xampp\\htdocs\\ojt-drive\\app\\Views\\admin_dashboard.php', 266)
+ 2 SYSTEMPATH\View\View.php(226): include('C:\\xampp\\htdocs\\ojt-drive\\app\\Views\\admin_dashboard.php')
+ 3 SYSTEMPATH\View\View.php(229): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1167): CodeIgniter\View\View->render('admin_dashboard', [], true)
+ 5 APPPATH\Controllers\Dashboard.php(124): view('admin_dashboard', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Dashboard->admin()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Dashboard))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+12 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\ojt-drive\\public\\index.php')
