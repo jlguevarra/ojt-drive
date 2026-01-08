@@ -15,14 +15,21 @@
         }
         tailwind.config = { darkMode: 'class' };
     </script>
-    <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'); body { font-family: 'Inter', sans-serif; }</style>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'); 
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Auto-fade for alerts */
+        .fade-out { animation: fadeOut 0.5s ease-in-out forwards; }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; display: none; } }
+    </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 h-screen flex overflow-hidden transition-colors duration-300">
 
     <?php 
         $role = session()->get('role');
-        $isAdmin = ($role == 'admin' || $role == 'program_chair'); // Check for admin/chair privileges generally
-        $canEditEmail = ($role == 'admin'); // Specific flag for email editing (Admins only)
+        $isAdmin = ($role == 'admin' || $role == 'program_chair'); 
+        $canEditEmail = ($role == 'admin'); 
         $themeColor = $isAdmin ? 'blue' : 'green';
     ?>
 
@@ -36,7 +43,7 @@
 
     <div class="flex-1 flex flex-col overflow-hidden">
         
-        <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-16 flex items-center justify-between px-6 pl-14 md:pl-6 shadow-sm z-10 transition-colors duration-300">
+        <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-16 flex items-center justify-between px-6 pl-14 md:pl-6 shadow-sm z-10 shrink-0 transition-colors duration-300">
             <h1 class="text-xl font-bold text-gray-800 dark:text-white">Account Settings</h1>
             
             <div class="flex items-center space-x-4">
@@ -58,57 +65,69 @@
             </div>
         </header>
 
-        <main class="flex-1 overflow-y-auto p-8">
-            <div class="max-w-2xl mx-auto">
+        <main class="flex-1 overflow-y-auto p-4 flex flex-col justify-center">
+            <div class="max-w-4xl mx-auto w-full">
                 
-                <?php if(session()->getFlashdata('success')):?>
-                    <div class="bg-green-100 dark:bg-green-900 border-l-4 border-green-500 text-green-700 dark:text-green-300 p-4 mb-6 rounded-r shadow-sm flex items-center">
-                        <i class='bx bx-check-circle mr-2 text-xl'></i>
-                        <?= session()->getFlashdata('success') ?>
-                    </div>
-                <?php endif;?>
+                <div id="alert-container">
+                    <?php if(session()->getFlashdata('success')):?>
+                        <div class="alert-toast bg-green-100 dark:bg-green-900 border-l-4 border-green-500 text-green-700 dark:text-green-300 p-4 mb-4 rounded-r shadow-sm flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class='bx bx-check-circle mr-2 text-xl'></i>
+                                <?= session()->getFlashdata('success') ?>
+                            </div>
+                            <button onclick="this.parentElement.remove()" class="text-green-700 dark:text-green-300">&times;</button>
+                        </div>
+                    <?php endif;?>
 
-                <?php if(session()->getFlashdata('errors')):?>
-                    <div class="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-600 dark:text-red-300 p-4 mb-6 rounded-lg text-sm">
-                        <?php foreach(session()->getFlashdata('errors') as $error): ?>
-                            <p class="flex items-center"><i class='bx bx-error-circle mr-2'></i> <?= $error ?></p>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif;?>
+                    <?php if(session()->getFlashdata('errors')):?>
+                        <div class="alert-toast bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-600 dark:text-red-300 p-4 mb-4 rounded-lg text-sm relative">
+                            <button onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-600 dark:text-red-300 text-lg">&times;</button>
+                            <?php foreach(session()->getFlashdata('errors') as $error): ?>
+                                <p class="flex items-center"><i class='bx bx-error-circle mr-2'></i> <?= $error ?></p>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif;?>
+                </div>
 
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors duration-300">
-                    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white">Profile Information</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Update your personal details and password.</p>
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors duration-300">
+                    <div class="px-6 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Profile Information</h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Update your details securely.</p>
+                        </div>
+                        <i class='bx bxs-user-detail text-3xl text-gray-300 dark:text-gray-600'></i>
                     </div>
                     
-                    <form action="<?= base_url('settings/update') ?>" method="post" class="p-6 space-y-6">
+                    <form action="<?= base_url('settings/update') ?>" method="post" class="p-6">
                         
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
-                            <input type="text" name="email" value="<?= session()->get('email') ?>" 
-                                <?= $canEditEmail ? '' : 'disabled' ?> 
-                                class="block w-full px-3 py-2 border rounded-lg text-sm transition-colors 
-                                <?= $canEditEmail 
-                                    ? "border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-{$themeColor}-500 focus:border-{$themeColor}-500" 
-                                    : "border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400" 
-                                ?>">
-                            
-                            <?php if(!$canEditEmail): ?>
-                                <p class="text-xs text-gray-400 mt-1">Email cannot be changed. Contact admin for help.</p>
-                            <?php endif; ?>
-                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
+                                <input type="text" name="email" value="<?= session()->get('email') ?>" 
+                                    <?= $canEditEmail ? '' : 'disabled' ?> 
+                                    class="block w-full px-3 py-2 border rounded-lg text-sm transition-colors 
+                                    <?= $canEditEmail 
+                                        ? "border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-{$themeColor}-500 focus:border-{$themeColor}-500" 
+                                        : "border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed" 
+                                    ?>">
+                                <?php if(!$canEditEmail): ?>
+                                    <p class="text-[10px] text-gray-400 mt-1"><i class='bx bxs-lock-alt align-middle'></i> Managed by Admin</p>
+                                <?php endif; ?>
+                            </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
-                            <input type="text" name="username" value="<?= session()->get('username') ?>" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-<?= $themeColor ?>-500 focus:border-<?= $themeColor ?>-500 text-sm transition-colors">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+                                <input type="text" name="username" value="<?= session()->get('username') ?>" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-<?= $themeColor ?>-500 focus:border-<?= $themeColor ?>-500 text-sm transition-colors">
+                            </div>
                         </div>
 
                         <hr class="border-gray-100 dark:border-gray-700 my-4">
 
                         <div>
-                            <h4 class="text-sm font-bold text-gray-800 dark:text-gray-200 mb-4">Change Password</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <h4 class="text-sm font-bold text-gray-800 dark:text-gray-200 mb-3 flex items-center">
+                                <i class='bx bxs-key mr-2 text-<?= $themeColor ?>-500'></i> Change Password
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
                                     <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">New Password</label>
                                     <input type="password" name="password" placeholder="Leave blank to keep current" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-<?= $themeColor ?>-500 focus:border-<?= $themeColor ?>-500 text-sm transition-colors">
@@ -120,9 +139,9 @@
                             </div>
                         </div>
 
-                        <div class="pt-4 flex justify-end">
-                            <button type="submit" class="bg-<?= $themeColor ?>-600 hover:bg-<?= $themeColor ?>-700 text-white font-medium py-2 px-6 rounded-lg shadow-md transition-all transform hover:scale-105">
-                                Save Changes
+                        <div class="pt-5 flex justify-end">
+                            <button type="submit" class="bg-<?= $themeColor ?>-600 hover:bg-<?= $themeColor ?>-700 text-white font-medium py-2 px-8 rounded-lg shadow-md transition-all transform hover:scale-105 active:scale-95 flex items-center">
+                                <i class='bx bx-save mr-2'></i> Save Changes
                             </button>
                         </div>
 
@@ -138,7 +157,7 @@
                 <i class='bx bx-log-out text-2xl text-red-600'></i>
             </div>
             <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-2">Confirm Logout</h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Are you sure you want to sign out of your account?</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Are you sure you want to sign out?</p>
             <div class="flex justify-center space-x-3">
                 <button onclick="closeLogoutModal()" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 text-sm font-medium transition-colors">Cancel</button>
                 <a href="<?= base_url('/logout') ?>" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium shadow-md shadow-red-500/30 transition-colors">Logout</a>
@@ -149,6 +168,16 @@
     <script>
         function openLogoutModal() { document.getElementById('logoutModal').classList.remove('hidden'); }
         function closeLogoutModal() { document.getElementById('logoutModal').classList.add('hidden'); }
+        
+        // Auto-fade alerts
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.querySelectorAll('.alert-toast').forEach(el => {
+                    el.classList.add('fade-out');
+                    setTimeout(() => el.remove(), 500);
+                });
+            }, 4000);
+        });
     </script>
 </body>
 </html>

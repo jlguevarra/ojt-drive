@@ -19,12 +19,14 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
 
-        .fade-out {
-            animation: fadeOut 3s ease-in-out forwards;
+        /* Notification Fade Out Animation */
+        .alert-toast {
+            transition: opacity 0.5s ease-out;
+            opacity: 1;
         }
-        @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; display: none; }
+        .fade-out {
+            opacity: 0;
+            pointer-events: none;
         }
 
         /* --- VIEW MODES CSS --- */
@@ -212,13 +214,22 @@
             
             <div id="alert-container">
                 <?php if(session()->getFlashdata('success')):?>
-                    <div class="alert-toast bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-300 px-4 py-3 rounded relative mb-4 fade-out">
-                        <span class="flex items-center"><i class='bx bxs-check-circle mr-2'></i> <?= session()->getFlashdata('success') ?></span>
+                    <div class="alert-toast bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-300 px-4 py-3 rounded relative mb-4 flex justify-between items-center shadow-md transition-all duration-500">
+                        <div class="flex items-center">
+                            <i class='bx bxs-check-circle mr-2 text-xl'></i>
+                            <span><?= session()->getFlashdata('success') ?></span>
+                        </div>
+                        <button onclick="this.parentElement.remove()" class="text-green-700 dark:text-green-300 hover:text-green-900 dark:hover:text-green-100 font-bold ml-4 text-xl leading-none focus:outline-none">&times;</button>
                     </div>
                 <?php endif;?>
+                
                 <?php if(session()->getFlashdata('error')):?>
-                    <div class="alert-toast bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded relative mb-4 fade-out">
-                        <span class="flex items-center"><i class='bx bxs-error-circle mr-2'></i> <?= session()->getFlashdata('error') ?></span>
+                    <div class="alert-toast bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded relative mb-4 flex justify-between items-center shadow-md transition-all duration-500">
+                        <div class="flex items-center">
+                            <i class='bx bxs-error-circle mr-2 text-xl'></i>
+                            <span><?= session()->getFlashdata('error') ?></span>
+                        </div>
+                        <button onclick="this.parentElement.remove()" class="text-red-700 dark:text-red-300 hover:text-red-900 dark:hover:text-red-100 font-bold ml-4 text-xl leading-none focus:outline-none">&times;</button>
                     </div>
                 <?php endif;?>
             </div>
@@ -453,10 +464,14 @@
             const savedView = localStorage.getItem('viewMode') || 'grid';
             setView(savedView);
             
-            // Auto dismiss alerts
-            setTimeout(() => {
-                document.querySelectorAll('.alert-toast').forEach(el => el.style.display = 'none');
-            }, 4000);
+            // --- ALERT AUTO DISMISS SCRIPT ---
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.alert-toast');
+                alerts.forEach(function(alert) {
+                    alert.classList.add('fade-out'); // Adds class with CSS transition
+                    setTimeout(() => alert.remove(), 500); // Waits for transition then removes
+                });
+            }, 5000);
         });
 
         // --- AUTO-SEARCH (SERVER SIDE) ---
